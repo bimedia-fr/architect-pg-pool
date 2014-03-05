@@ -60,10 +60,11 @@ module.exports = function setup(options, imports, register) {
     // register routes 
     rest.get('/hello/:name', function (req, res, next) {
         db.connection(function (err, client, done) {
-            client.query('SELECT * FROM Users WHERE id=$1', [req.params.name], function(err, res){
-                done();
-                res.write("{'message':'hello," + res.rows[0].name + "'}");
-                res.end();
+            client.query('SELECT * FROM Users WHERE id=$1', [req.params.name], 
+                function(err, res){
+                    done();
+                    res.write("{'message':'hello," + res.rows[0].name + "'}");
+                    res.end();
             });
         });
     });
