@@ -9,6 +9,14 @@ Expose a posgresql connection pool as architect plugin.
 npm install --save architect-pg-pool
 ```
 
+### Config Format 
+```js
+{
+  "packagePath": "architect-pg-pool",
+  "url": "postgresql://localhost/dbname"
+}
+```
+
 ### Usage
 
 Boot [Architect](https://github.com/c9/architect) :
