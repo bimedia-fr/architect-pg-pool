@@ -9,7 +9,6 @@ Expose a posgresql connection pool as architect plugin.
 npm install --save architect-pg-pool
 ```
 
-<<<<<<< HEAD
 ### Config Format
 ```js
 module.exports = [{
