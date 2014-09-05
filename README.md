@@ -84,3 +84,16 @@ module.exports = function setup(options, imports, register) {
     register();
 };
 ```
+### Multiple pool configuration
+This module supports multiple pools.
+
+Here is how to define 2 different pools :
+```js
+module.exports = [{
+    packagePath: "architect-pg-pool",
+    url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname',
+    checkOnStartUp : true
+}];
+```
+* `url` :  Defines the postgres url to use for connection
+* `checkOnStartUp` : Defines if we must check connection validity on startup default is *false*.
