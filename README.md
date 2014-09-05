@@ -91,7 +91,12 @@ Here is how to define 2 different pools :
 ```js
 module.exports = [{
     packagePath: "architect-pg-pool",
-    url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname',
+    first : {
+    	url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname'
+    },
+	second : {
+    	url: 'postgresql://postgresuser:postgrespwd@localhost:5432/otherdb'
+    },    
     checkOnStartUp : true
 }];
 ```
