@@ -101,19 +101,45 @@ module.exports = [{
     checkOnStartUp : true
 }];
 ```
-This will create 2 properties (`first` and `second`) in the `db` object.
 
+This will create 2 properties (`first` and `second`) in the `db` object.
 ```js
 module.exports = function setup(options, imports, register) {
     var db = imports.db;
     db.first.connection(function (err, client, done) {
-      client.query('SELECT * FROM Users WHERE id=$1', [req.params.name], 
-        function(err, res){
-          done();
-          res.write("{'message':'hello," + res.rows[0].name + "'}");
-          res.end();
-      });
+      client.query(/*...*/);
     });    
+    register();
+};
+```
+#### default pool
+A pool can be marked as default and will be available in `db.connection`.
+Here is how to define 2 different pools with the second as default :
+```js
+module.exports = [{
+    packagePath: "architect-pg-pool",
+    first : {
+    	url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname'
+    },
+	second : {
+    	url: 'postgresql://postgresuser:postgrespwd@localhost:5432/otherdb',
+        'default' : true
+    },
+    checkOnStartUp : true
+}];
+```
+This will create 2 properties (`first` and `second`) in the `db` object.
+```js
+module.exports = function setup(options, imports, register) {
+    var db = imports.db;
+    // this will use second pool
+    db.connection(function (err, client, done) {
+      client.query(/*...*/);
+    });
+    // second pool is also available
+    db.second.connection(function (err, client, done) {
+      client.query(/*...*/);
+    });
     register();
 };
 ```
