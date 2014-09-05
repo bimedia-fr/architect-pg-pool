@@ -35,7 +35,6 @@ module.exports = function setup(options, imports, register) {
                 var pool = createPool(opts[key]);
                 res.db[key] = pool;
                 if (opts[key]['default']) {
-                    console.log('default pool is ' + key);
                     res.db.connection = pool.connection;
                 }
             }
