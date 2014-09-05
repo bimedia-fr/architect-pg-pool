@@ -67,7 +67,8 @@ Eventually use pg connection in your routes `./routes/index.js` :
 
 ```js
 module.exports = function setup(options, imports, register) {
-    var rest = imports.db;
+    var rest = imports.rest;
+    var db = imports.db;
 
     // register routes 
     rest.get('/hello/:name', function (req, res, next) {
@@ -96,9 +97,23 @@ module.exports = [{
     },
 	second : {
     	url: 'postgresql://postgresuser:postgrespwd@localhost:5432/otherdb'
-    },    
+    },
     checkOnStartUp : true
 }];
 ```
-* `url` :  Defines the postgres url to use for connection
-* `checkOnStartUp` : Defines if we must check connection validity on startup default is *false*.
+This will create 2 properties (`first` and `second`) in the `db` object.
+
+```js
+module.exports = function setup(options, imports, register) {
+    var db = imports.db;
+    db.first.connection(function (err, client, done) {
+      client.query('SELECT * FROM Users WHERE id=$1', [req.params.name], 
+        function(err, res){
+          done();
+          res.write("{'message':'hello," + res.rows[0].name + "'}");
+          res.end();
+      });
+    });    
+    register();
+};
+```
