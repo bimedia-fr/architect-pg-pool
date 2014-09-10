@@ -4,6 +4,14 @@
 var assert = require('assert'), vows = require('vows');
 var pgpool = require('../src/index');
 
+function assertPool(pool) {
+    assert.ok(pool);
+    assert.ok(pool.connection);
+    assert.ok(pool.query);
+    assert.ok(pool.queryStream);
+}
+
+
 vows.describe('pg pool').addBatch({
 
     'create a default unamed pool': {
@@ -12,6 +20,12 @@ vows.describe('pg pool').addBatch({
         },
         'returns a pool object with a *connection* method ' : function (res) {
             assert.ok(res.db.connection);
+        },
+        'returns a pool object with a *query* method ' : function (res) {
+            assert.ok(res.db.query);
+        },
+        'returns a pool object with a *queryStream* method ' : function (res) {
+            assert.ok(res.db.queryStream);
         },
         'exports a *db* object to architect ' : function (res) {
             assert.ok(res.db);
@@ -32,12 +46,10 @@ vows.describe('pg pool').addBatch({
             assert.ok(res.db);
         },
         'returns a pool named *first* with a *connection* method ' : function (res) {
-            assert.ok(res.db.first);
-            assert.ok(res.db.first.connection);
+            assertPool(res.db.first);
         },
         'returns a pool named *second* with a *connection* method ' : function (res) {
-            assert.ok(res.db.second);
-            assert.ok(res.db.second.connection);
+            assertPool(res.db.second);
         },
         'there is no *default* pool : *db.connection* is not avaliable ' : function (res) {
             assert.ok(!res.db.connection);
@@ -59,16 +71,13 @@ vows.describe('pg pool').addBatch({
             assert.ok(res.db);
         },
         'returns a pool named *first* with a *connection* method ' : function (res) {
-            assert.ok(res.db.first);
-            assert.ok(res.db.first.connection);
+            assertPool(res.db.first);
         },
         'returns a pool named *second* with a *connection* method ' : function (res) {
-            assert.ok(res.db.second);
-            assert.ok(res.db.second.connection);
+            assertPool(res.db.second);
         },
         'there is a pool marked as *default* which is avaliable under *db* ' : function (res) {
-            assert.ok(res.db);
-            assert.ok(res.db.connection);
+            assertPool(res.db.first);
         }
     }
 }).exportTo(module);

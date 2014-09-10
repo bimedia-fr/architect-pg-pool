@@ -1,15 +1,35 @@
 /*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 "use strict";
 
-var async = require('async');
+var async = require('async'),
+    QueryStream = require('pg-query-stream');
 
 module.exports = function setup(options, imports, register) {
     var pg = require('pg');
 
     function createPool(config) {
         return {
-            'connection': function (cb) {
-                pg.connect(config.url, cb);
+            'connection': function (callback) {
+                pg.connect(config.url, callback);
+            },
+            'query' : function (sql, params, callback) {
+                pg.connect(config.url, function (err, handle, done) {
+                    handle.query(sql, params, function (err, res) {
+                        done();
+                        callback(err, res);
+                    });
+                });
+            },
+            'queryStream' : function (sql, params, callback) {
+                pg.connect(config.url, function (err, handle, done) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    var query = new QueryStream(sql, params);
+                    var stream = handle.query(query);
+                    stream.once('end', done);
+                    callback(null, stream);
+                });
             }
         };
     }
