@@ -5,10 +5,10 @@ var assert = require('assert'), vows = require('vows');
 var pgpool = require('../src/index');
 
 function assertPool(pool) {
-    assert.ok(pool);
-    assert.ok(pool.connection);
-    assert.ok(pool.query);
-    assert.ok(pool.queryStream);
+    assert.ok(pool, 'pool is defined');
+    assert.ok(pool.connection, 'pool has a `connection`  method');
+    assert.ok(pool.query, 'pool has a `query`  method');
+    assert.ok(pool.queryStream, 'pool has a `queryStream` method');
 }
 
 
@@ -68,7 +68,7 @@ vows.describe('pg pool').addBatch({
             }, {}, this.callback);
         },
         'exports a *db* object to architect ' : function (res) {
-            assert.ok(res.db);
+            assertPool(res.db);
         },
         'returns a pool named *first* with a *connection* method ' : function (res) {
             assertPool(res.db.first);

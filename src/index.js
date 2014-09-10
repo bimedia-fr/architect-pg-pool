@@ -55,7 +55,9 @@ module.exports = function setup(options, imports, register) {
                 var pool = createPool(opts[key]);
                 res.db[key] = pool;
                 if (opts[key]['default']) {
-                    res.db.connection = pool.connection;
+                    Object.keys(pool).forEach(function (key) {
+                        res.db[key] = pool[key];
+                    });
                 }
             }
         });
