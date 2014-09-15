@@ -169,3 +169,8 @@ The `queryStream` method let you directly query the database without worrying ab
 * _string_ text: the query text
 * optional _array_ parameters: the query parameters
 * optional _function_ callback : the function called when stream is ready
+
+Once the stream is ready the callback is fired with an :
+
+* `err` object if an error occured or null,
+* `stream` the pg  result stream.
