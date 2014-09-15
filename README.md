@@ -163,7 +163,6 @@ Once the data is ready the callback is fired with an :
 
 * `err` object if an error occured or null,
 * `rows` the pg result set.
-* `done`, the close method.
 
 #### queryStream
 The `queryStream` method let you directly query the database without worrying about the database connection. This method passes a stream to the callback instead of a resultset. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
