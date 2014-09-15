@@ -143,3 +143,30 @@ module.exports = function setup(options, imports, register) {
     register();
 };
 ```
+### API
+The pool object (`db`) has the following methods :
+
+#### connection
+Retreive a connection from the pool. The method takes a callback as parameter. Once the connection is avaliable the callback is called with an :
+
+* `err` object if an error occured or null,
+* `client` the pg client object.
+* `done`, the close method.
+
+#### query
+The `query` method let you directly query the database without worrying about the database connection. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query](https://github.com/brianc/node-postgres/wiki/Client#simple-queries).
+* _string_ text: the query text
+* optional _array_ parameters: the query parameters
+* optional _function_ callback : the function called when data is ready
+
+Once the data is ready the callback is fired with an :
+
+* `err` object if an error occured or null,
+* `rows` the pg result set.
+* `done`, the close method.
+
+#### queryStream
+The `queryStream` method let you directly query the database without worrying about the database connection. This method passes a stream to the callback instead of a resultset. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
+* _string_ text: the query text
+* optional _array_ parameters: the query parameters
+* optional _function_ callback : the function called when stream is ready
