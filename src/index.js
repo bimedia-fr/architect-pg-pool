@@ -1,8 +1,8 @@
 /*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 "use strict";
 
-var async = require('async'),
-    QueryStream = require('pg-query-stream');
+var async = require('async');
+var QueryStream = require('pg-query-stream');
 
 module.exports = function setup(options, imports, register) {
     var pg = require('pg');
@@ -10,18 +10,20 @@ module.exports = function setup(options, imports, register) {
     function createPool(config) {
         return {
             'connection': function (callback) {
-                pg.connect(config.url, callback);
+                pg.connect(config.url, function (err, handle, done) {
+                    callback(err, handle);
+                    done();
+                });
             },
             'query' : function (sql, params, callback) {
-                pg.connect(config.url, function (err, handle, done) {
+                connection(function (err, handle) {
                     handle.query(sql, params, function (err, res) {
-                        done();
                         callback(err, res);
                     });
                 });
             },
             'queryStream' : function (sql, params, callback) {
-                pg.connect(config.url, function (err, handle, done) {
+                connection(function (err, handle) {
                     if (err) {
                         return callback(err);
                     }
@@ -35,18 +37,16 @@ module.exports = function setup(options, imports, register) {
     }
 
     function checkConnection(pool, cb) {
-        pool.connection(function (err, client, done) {
+        connection(function (err, handle) {
             if (err) {
                 return cb('unable to create pg connection to ' + pool.url + ' : ' + err);
             }
-            done();
             cb();
         });
     }
 
     function createPools(opts) {
         var res = { db : {}};
-        var dburl = options.url;
         if (opts.url) {
             res.db = createPool(opts);
         }
