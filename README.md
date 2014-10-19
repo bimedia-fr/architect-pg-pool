@@ -72,10 +72,9 @@ module.exports = function setup(options, imports, register) {
 
     // register routes 
     rest.get('/hello/:name', function (req, res, next) {
-        db.connection(function (err, client, done) {
+        db.connection(function (err, client) {
             client.query('SELECT * FROM Users WHERE id=$1', [req.params.name], 
                 function(err, res){
-                    done();
                     res.write("{'message':'hello," + res.rows[0].name + "'}");
                     res.end();
             });
@@ -106,7 +105,7 @@ This will create 2 properties (`first` and `second`) in the `db` object.
 ```js
 module.exports = function setup(options, imports, register) {
     var db = imports.db;
-    db.first.connection(function (err, client, done) {
+    db.first.connection(function (err, client) {
       client.query(/*...*/);
     });    
     register();
@@ -133,11 +132,11 @@ This will create 2 properties (`first` and `second`) in the `db` object.
 module.exports = function setup(options, imports, register) {
     var db = imports.db;
     // this will use second pool
-    db.connection(function (err, client, done) {
+    db.connection(function (err, client) {
       client.query(/*...*/);
     });
     // second pool is also available
-    db.second.connection(function (err, client, done) {
+    db.second.connection(function (err, client) {
       client.query(/*...*/);
     });
     register();
@@ -152,24 +151,26 @@ Retreive a connection from the pool. The method takes a callback as parameter. O
 * `err` object if an error occured or null;
 * `client` the pg client object.
 
+The `client` is automatically closed after callback execution.
+
 #### query
 The `query` method let you directly query the database without worrying about the database connection. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query](https://github.com/brianc/node-postgres/wiki/Client#simple-queries).
-* _string_ text: the query text
-* optional _array_ parameters: the query parameters
-* optional _function_ callback : the function called when data is ready
+* _string_ text: the query text;
+* optional _array_ parameters: the query parameters;
+* optional _function_ callback : the function called when data is ready.
 
 Once the data is ready the callback is fired with an :
 
-* `err` object if an error occured or null,
+* `err` object if an error occured or null;
 * `rows` the pg result set.
 
 #### queryStream
 The `queryStream` method let you directly query the database without worrying about the database connection. This method passes a stream to the callback instead of a resultset. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
-* _string_ text: the query text
-* optional _array_ parameters: the query parameters
-* optional _function_ callback : the function called when stream is ready
+* _string_ text: the query text;
+* optional _array_ parameters: the query parameters;
+* optional _function_ callback : the function called when stream is ready.
 
 Once the stream is ready the callback is fired with an :
 
-* `err` object if an error occured or null,
+* `err` object if an error occured or null;
 * `stream` the pg  result stream.
