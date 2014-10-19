@@ -149,9 +149,8 @@ The pool object (`db`) has the following methods :
 #### connection
 Retreive a connection from the pool. The method takes a callback as parameter. Once the connection is avaliable the callback is called with an :
 
-* `err` object if an error occured or null,
+* `err` object if an error occured or null;
 * `client` the pg client object.
-* `done`, the close method.
 
 #### query
 The `query` method let you directly query the database without worrying about the database connection. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query](https://github.com/brianc/node-postgres/wiki/Client#simple-queries).
