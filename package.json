@@ -24,7 +24,8 @@
   "dependencies": {
     "async": "^0.9.0",
     "pg": "~2.11.1",
-    "pg-query-stream": "^0.6.0"
+    "pg-query-stream": "^0.6.0",
+    "pg-transaction": "^1.0.3"
   },
   "plugin": {
     "provides": [

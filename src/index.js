@@ -21,25 +21,23 @@ module.exports = function setup(options, imports, register) {
     var pg = require('pg');
 
     function createPool(config) {
-        return {
+        var result =
+         {
             connection: function (callback) {
                 pg.connect(config.url, function (err, handle, done) {
-                    try {
-                        callback(err, handle);
-                    } finally {
-                        done();
-                    }
+                        callback(err, handle, done);
                 });
             },
             query: function (sql, params, callback) {
-                connection(function (err, handle) {
+                result.connection(function (err, handle, done) {
                     handle.query(sql, params, function (err, res) {
                         callback(err, res);
+                        done();
                     });
                 });
             },
             queryStream: function (sql, params, callback) {
-                connection(function (err, handle) {
+                result.connection(function (err, handle, done) {
                     if (err) {
                         return callback(err);
                     }
@@ -50,6 +48,7 @@ module.exports = function setup(options, imports, register) {
                 });
             }
         };
+        return result;
     }
 
     function checkConnection(pool, cb) {
