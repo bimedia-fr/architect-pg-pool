@@ -35,18 +35,18 @@ module.exports = function setup(options, imports, register) {
                         });
                     });
                 },
-                queryStream: function (sql, params, callback) {
-                    result.connection(function (err, handle, done) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        var query = new QueryStream(sql, params);
-                        var stream = handle.query(query);
-                        stream.once('end', done);
-                        callback(null, stream);
-                    });
-                }
-            };
+            queryStream: function (sql, params, callback) {
+                result.connection(function (err, handle, done) {
+                    if (err) {
+                        return callback(err);
+                    }
+                    var query = new QueryStream(sql, params);
+                    var stream = handle.query(query);
+                    stream.once('end', done);
+                    callback(null, stream);
+                });
+            }
+        };
         return result;
     }
 
