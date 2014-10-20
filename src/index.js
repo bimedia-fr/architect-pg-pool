@@ -21,8 +21,7 @@ module.exports = function setup(options, imports, register) {
     var pg = require('pg');
 
     function createPool(config) {
-        var result =
-         {
+        var result = {
             connection: function (callback) {
                 pg.connect(config.url, function (err, handle, done) {
                         callback(err, handle, done);
@@ -30,24 +29,24 @@ module.exports = function setup(options, imports, register) {
             },
             query: function (sql, params, callback) {
                 result.connection(function (err, handle, done) {
-                    handle.query(sql, params, function (err, res) {
-                        callback(err, res);
-                        done();
+                        handle.query(sql, params, function (err, res) {
+                            callback(err, res);
+                            done();
+                        });
                     });
-                });
-            },
-            queryStream: function (sql, params, callback) {
-                result.connection(function (err, handle, done) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    var query = new QueryStream(sql, params);
-                    var stream = handle.query(query);
-                    stream.once('end', done);
-                    callback(null, stream);
-                });
-            }
-        };
+                },
+                queryStream: function (sql, params, callback) {
+                    result.connection(function (err, handle, done) {
+                        if (err) {
+                            return callback(err);
+                        }
+                        var query = new QueryStream(sql, params);
+                        var stream = handle.query(query);
+                        stream.once('end', done);
+                        callback(null, stream);
+                    });
+                }
+            };
         return result;
     }
 
