@@ -72,9 +72,10 @@ module.exports = function setup(options, imports, register) {
 
     // register routes 
     rest.get('/hello/:name', function (req, res, next) {
-        db.connection(function (err, client) {
+        db.connection(function (err, client, done) {
             client.query('SELECT * FROM Users WHERE id=$1', [req.params.name], 
                 function(err, res){
+                    done();
                     res.write("{'message':'hello," + res.rows[0].name + "'}");
                     res.end();
             });
@@ -149,9 +150,8 @@ The pool object (`db`) has the following methods :
 Retreive a connection from the pool. The method takes a callback as parameter. Once the connection is avaliable the callback is called with an :
 
 * `err` object if an error occured or null;
-* `client` the pg client object.
-
-The `client` is automatically closed after callback execution.
+* `client` the pg client object;
+* `done`, the close method.
 
 #### query
 The `query` method let you directly query the database without worrying about the database connection. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query](https://github.com/brianc/node-postgres/wiki/Client#simple-queries).
