@@ -1,10 +1,10 @@
 {
   "name": "architect-pg-pool",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "architect postgresql connection pool",
   "main": "src/index.js",
   "scripts": {
-    "test": "vows --spec test/test*.js"
+    "test": "vows --spec test/test.index.js"
   },
   "repository": {
     "type": "git",
