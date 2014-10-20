@@ -22,7 +22,7 @@ module.exports = function setup(options, imports, register) {
 
     function createPool(config) {
         return {
-            'connection': function (callback) {
+            connection: function (callback) {
                 pg.connect(config.url, function (err, handle, done) {
                     try {
                         callback(err, handle);
@@ -31,14 +31,14 @@ module.exports = function setup(options, imports, register) {
                     }
                 });
             },
-            'query': function (sql, params, callback) {
+            query: function (sql, params, callback) {
                 connection(function (err, handle) {
                     handle.query(sql, params, function (err, res) {
                         callback(err, res);
                     });
                 });
             },
-            'queryStream': function (sql, params, callback) {
+            queryStream: function (sql, params, callback) {
                 connection(function (err, handle) {
                     if (err) {
                         return callback(err);
