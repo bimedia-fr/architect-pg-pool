@@ -23,18 +23,19 @@ module.exports = function setup(options, imports, register) {
     function createPool(config) {
         var result = {
             connection: function (callback) {
-                pg.connect(config.url, function (err, handle, done) {
-                        callback(err, handle, done);
-                });
+                pg.connect(config.url, callback);
             },
             query: function (sql, params, callback) {
                 result.connection(function (err, handle, done) {
-                        handle.query(sql, params, function (err, res) {
-                            callback(err, res);
-                            done();
-                        });
+                    if (err) {
+                        return callback(err);
+                    }
+                    handle.query(sql, params, function (err, res) {
+                        callback(err, res);
+                        done();
                     });
-                },
+                });
+            },
             queryStream: function (sql, params, callback) {
                 result.connection(function (err, handle, done) {
                     if (err) {
@@ -60,7 +61,9 @@ module.exports = function setup(options, imports, register) {
     }
 
     function createPools(opts) {
-        var res = {db: {}};
+        var res = {
+            db: {}
+        };
         if (opts.url) {
             res.db = createPool(opts);
         }
@@ -92,7 +95,7 @@ module.exports = function setup(options, imports, register) {
             }
             register(null, pools);
         });
-    } else {
+    } else {
         register(null, pools);
     }
 };
