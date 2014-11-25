@@ -52,17 +52,26 @@ module.exports = function setup(options, imports, register) {
     }
 
     function checkConnection(pool, cb) {
-        pool.connection(function (err, handle) {
+        pool.connection(function (err, handle, done) {
             if (err) {
                 return cb('unable to create pg connection to ' + pool.url + ' : ' + err);
             }
+            done();
             cb();
         });
     }
 
     function createPools(opts) {
         var res = {
-            db: {}
+            db: {},
+            onDestroy: function () {
+                Object.keys(pg.pools.all).forEach(function (poolname) {
+                    var pool = pg.pools.all[poolname];
+                    pool.drain(function () {
+                        pool.destroyAllNow();
+                    });
+                });
+            }
         };
         if (opts.url) {
             res.db = createPool(opts);
