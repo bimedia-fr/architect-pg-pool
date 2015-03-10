@@ -22,10 +22,10 @@ var TSTAMP_WO_TZ =  1114;
 module.exports = function setup(options, imports, register) {
     var pg = require('pg');
 
-    if (options.defaultTimezone && options.defaultTimezone != 'UTC') {
+    if (!options.defaultTimezoneUTC) {
         var oldParser = pg.types.getTypeParser(TSTAMP_WO_TZ);
         pg.types.setTypeParser(TSTAMP_WO_TZ, function (str) {
-            var date = new Date(oldParser(str));
+            var date = oldParser(str);
             return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
         });
     }
