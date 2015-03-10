@@ -64,7 +64,7 @@ module.exports = function setup(options, imports, register) {
     function checkConnection(pool, cb) {
         pool.connection(function (err, handle, done) {
             if (err) {
-                return cb('unable to create pg connection to ' + pool.url + ' : ' + err);
+                return cb(new Error('unable to create pg connection to ' + pool.url + ' : ' + err));
             }
             done();
             cb();
