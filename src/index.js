@@ -14,13 +14,13 @@
  */
 "use strict";
 
+var createPool = require('./pool');
 var async = require('async');
-var QueryStream = require('pg-query-stream');
+var pg = require('pg');
 
 var TSTAMP_WO_TZ =  1114;
 
 module.exports = function setup(options, imports, register) {
-    var pg = require('pg');
 
     if (!options.defaultTimezoneUTC) {
         var oldParser = pg.types.getTypeParser(TSTAMP_WO_TZ);
@@ -28,37 +28,6 @@ module.exports = function setup(options, imports, register) {
             var date = oldParser(str);
             return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
         });
-    }
-
-    function createPool(config) {
-        var result = {
-            connection: function (callback) {
-                pg.connect(config.url, callback);
-            },
-            query: function (sql, params, callback) {
-                result.connection(function (err, handle, done) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    handle.query(sql, params, function (err, res) {
-                        callback(err, res);
-                        done();
-                    });
-                });
-            },
-            queryStream: function (sql, params, callback) {
-                result.connection(function (err, handle, done) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    var query = new QueryStream(sql, params);
-                    var stream = handle.query(query);
-                    stream.once('end', done);
-                    callback(null, stream);
-                });
-            }
-        };
-        return result;
     }
 
     function checkConnection(pool, cb) {
