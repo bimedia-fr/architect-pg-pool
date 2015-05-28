@@ -19,12 +19,14 @@ var pgpool = require('../src/index');
 
 function assertPool(pool) {
     assert.isObject(pool, 'pool is defined');
-    assert.isFunction(pool.connection, 'pool has a `connection`  method');
-    assert.isFunction(pool.query, 'pool has a `query`  method');
-    assert.isFunction(pool.queryStream, 'pool has a `queryStream` method');
+    ['connection', 'query', 'queryStream']
+        .forEach(function (el) {
+            assert.isFunction(pool[el], 'pool has a `' + el + '`  method');
+        });
 }
 
 var URI = 'postgresql://localhost:5435/dbname';
+
 
 vows.describe('pg pool').addBatch({
     
