@@ -15,7 +15,8 @@
 "use strict";
 
 var pg = require('pg'),
-    QueryStream = require('pg-query-stream');
+    QueryStream = require('pg-query-stream'),
+    transaction = require('./transaction');
 
 module.exports = function (config) {
     var result = {
@@ -43,7 +44,8 @@ module.exports = function (config) {
                 stream.once('end', done);
                 callback(null, stream);
             });
-        }
+        },
+        transaction: transaction(result)
     };
     return result;
 };
