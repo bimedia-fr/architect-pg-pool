@@ -44,12 +44,7 @@ module.exports = function setup(options, imports, register) {
         var res = {
             db: {},
             onDestroy: function () {
-                Object.keys(pg.pools.all).forEach(function (poolname) {
-                    var pool = pg.pools.all[poolname];
-                    pool.drain(function () {
-                        pool.destroyAllNow();
-                    });
-                });
+                pg.end();
             }
         };
         if (opts.url) {
