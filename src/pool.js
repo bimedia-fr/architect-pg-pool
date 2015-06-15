@@ -15,7 +15,17 @@
 "use strict";
 
 var pg = require('pg'),
-    QueryStream = require('pg-query-stream');
+    QueryStream = require('pg-query-stream'),
+    PassThrough = require('stream').PassThrough;
+
+function deferred(fn) {
+    var str = new PassThrough({
+        'objectMode': true
+    });
+    fn(str);
+    return str;
+}
+
 
 module.exports = function (config) {
     var result = {
@@ -34,14 +44,21 @@ module.exports = function (config) {
             });
         },
         queryStream: function (sql, params, callback) {
-            result.connection(function (err, handle, done) {
-                if (err) {
-                    return callback(err);
-                }
-                var query = new QueryStream(sql, params);
-                var stream = handle.query(query);
-                stream.once('end', done);
-                callback(null, stream);
+            return deferred(function (str) {
+                result.connection(function (err, handle, done) {
+                    if (err) {
+                        if (callback) {
+                            return callback(err);
+                        }
+                        str.emit('error', err);
+                        return;
+                    }
+                    var query = new QueryStream(sql, params);
+                    var stream = handle.query(query);
+                    stream.once('end', done);
+                    stream.pipe(str);
+                    return callback && callback(str);
+                });
             });
         }
     };
