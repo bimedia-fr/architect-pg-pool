@@ -14,10 +14,10 @@
  */
 "use strict";
 
-var QueryStream = require('pg-query-stream');
+var api = require('./api');
 
 
-module.exports = function (pool) {
+module.exports = function (pool, provider) {
 
     var rollback = function (client, done) {
         client.query('ROLLBACK', function (err) {
@@ -43,24 +43,20 @@ module.exports = function (pool) {
                     rollback(client, done);
                     return cb(err);
                 }
-                var trx = {
-                    query: client.query.bind(client),
-                    queryStream: function trxQueryStream(sql, params, callback) {
-                        var query = new QueryStream(sql, params);
-                        callback(null, client.query(query));
-                    },
-                    commit: function trxCommit(callback) {
-                        client.query('COMMIT', function (err) {
-                            done(err); // close connection
-                            callback(err);
-                        });
-                    },
-                    rollback: function trxRollback(callback) {
-                        rollback(client, function (err) {
-                            done(err); // close connection
-                            callback(err);
-                        });
-                    }
+                var trx = api(function provider(callback) {
+                    callback(null, client, function noop() {});// do not close until commit or rollback
+                });
+                trx.commit = function trxCommit(callback) {
+                    client.query('COMMIT', function (err) {
+                        done(err); // close connection
+                        callback(err);
+                    });
+                };
+                trx.rollback =  function trxRollback(callback) {
+                    rollback(client, function (err) {
+                        done(err); // close connection
+                        callback(err);
+                    });
                 };
 
                 cb(null, trx);
