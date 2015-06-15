@@ -164,13 +164,37 @@ Once the data is ready the callback is fired with an :
 * `err` object if an error occured or null;
 * `rows` the pg result set.
 
+```js
+module.exports = function setup(options, imports, register) {
+    var db = imports.db;
+    
+    db.query('SELECT * from USERS', function (err, res) {
+        res.rows.forEach(console.log);
+    });
+    //...
+};
+```
+
 #### queryStream
 The `queryStream` method let you directly query the database without worrying about the database connection. This method passes a stream to the callback instead of a resultset. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
 * _string_ text: the query text;
 * optional _array_ parameters: the query parameters;
 * optional _function_ callback : the function called when stream is ready.
+* returns: ReadableStream
 
 Once the stream is ready the callback is fired with an :
 
 * `err` object if an error occured or null;
 * `stream` the pg  result stream.
+
+```js
+var JSONSteam = require('JSONStream');
+
+module.exports = function setup(options, imports, register) {
+    var db = imports.db;
+    db.queryStream('SELECT * from USERS')
+        .pipe(JSONSteam.stringify())
+        .pipe(process.stdout);
+    //...
+};
+```
