@@ -4,7 +4,7 @@
   "description": "architect postgresql connection pool",
   "main": "src/index.js",
   "scripts": {
-    "test": "vows --spec test/test.index.js"
+    "test": "nodeunit test/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,6 @@
     ]
   },
   "devDependencies": {
-    "vows": "^0.7.0"
+    "nodeunit": "^0.9.1"
   }
 }
