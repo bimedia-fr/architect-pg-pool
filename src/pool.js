@@ -15,15 +15,13 @@
 "use strict";
 
 var pg = require('pg'),
-    QueryStream = require('pg-query-stream'),
     transaction = require('./transaction'),
-    api = require('./api'),
-    PassThrough = require('stream').PassThrough;
+    api = require('./api');
 
 module.exports = function (config) {
     var provider = function (callback) {
         return pg.connect(config.url, callback);
     };
     var result = api(provider);
-    return result;
+    return transaction(result);
 };

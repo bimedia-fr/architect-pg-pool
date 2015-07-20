@@ -17,7 +17,7 @@
 var api = require('./api');
 
 
-module.exports = function (pool, provider) {
+module.exports = function (pool) {
 
     var rollback = function (client, done) {
         client.query('ROLLBACK', function (err) {
@@ -30,7 +30,7 @@ module.exports = function (pool, provider) {
         });
     };
 
-    return function (cb) {
+    pool.transaction = function (cb) {
 
         pool.connection(function (err, client, done) {
 
@@ -63,4 +63,5 @@ module.exports = function (pool, provider) {
             });
         });
     };
+    return pool;
 };
