@@ -1,7 +1,7 @@
 architect-pg-pool [![build status](https://secure.travis-ci.org/bimedia-fr/architect-pg-pool.png)](https://travis-ci.org/bimedia-fr/architect-pg-pool)
 =================
 
-Expose a posgresql connection pool as architect plugin. 
+Expose a posgresql connection pool as architect plugin. Automaticaly returns connection to the pool after query.
 
 ### Installation
 
