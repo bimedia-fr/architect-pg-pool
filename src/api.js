@@ -30,15 +30,20 @@ function deferred(fn) {
 module.exports = function api(provider) {
     var result = {
         connection: provider,
-        query: function (sql, params, callback) {
+        query: function () {
+            var args = Array.prototype.slice.call(arguments);
+            var callback = args.splice(-1)[0];
+
             result.connection(function (err, handle, done) {
                 if (err) {
                     return callback(err);
                 }
-                handle.query(sql, params, function (err, res) {
+                var cb = function (err, res) {
                     callback(err, res);
                     done();
-                });
+                };
+                args.push(cb);
+                handle.query.apply(handle, args);
             });
         },
         queryStream: function (sql, params, callback) {

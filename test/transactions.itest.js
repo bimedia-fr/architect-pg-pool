@@ -29,7 +29,7 @@ module.exports = {
             url: URI
         }, {}, function (err, res) {
             self.pg = res;
-            self.pg.db.query(CREATE_TMP, [], done);
+            self.pg.db.query(CREATE_TMP, done);
         });
     },
     tearDown: function (done) {
@@ -57,8 +57,8 @@ module.exports = {
     testTrxSelectCommit: function (test) {
         this.pg.db.transaction(function (err, trx)  {
             async.series([
-                async.apply(trx.query.bind(trx), INSERT_SQL, []),
-                async.apply(trx.query.bind(trx), SELECT_SQL, [])
+                async.apply(trx.query.bind(trx), INSERT_SQL),
+                async.apply(trx.query.bind(trx), SELECT_SQL)
             ], function (err, res) {
                 test.ifError(err);
                 trx.commit(function (err) {
@@ -71,7 +71,7 @@ module.exports = {
     },
     testTrxSelectStreamCommit: function (test) {
         this.pg.db.transaction(function (err, trx)  {
-            trx.query(INSERT_SQL, [], function (err, res) {
+            trx.query(INSERT_SQL, function (err, res) {
                 test.ifError(err);
                 var count = 0;
                 var stream = trx.queryStream(SELECT_SQL);
@@ -93,8 +93,8 @@ module.exports = {
     testTrxSelectRollback: function (test) {
         this.pg.db.transaction(function (err, trx)  {
             async.series([
-                async.apply(trx.query.bind(trx), INSERT_SQL, []),
-                async.apply(trx.query.bind(trx), SELECT_SQL, [])
+                async.apply(trx.query.bind(trx), INSERT_SQL),
+                async.apply(trx.query.bind(trx), SELECT_SQL)
             ], function (err, res) {
                 test.ifError(err);
                 trx.rollback(function (err) {
@@ -108,9 +108,9 @@ module.exports = {
     testTrxCommit: function (test) {
         this.pg.db.transaction(function (err, trx)  {
             async.series([
-                async.apply(trx.query.bind(trx), INSERT_SQL, []),
+                async.apply(trx.query.bind(trx), INSERT_SQL),
                 async.apply(trx.commit.bind(trx)),
-                async.apply(trx.query.bind(trx), SELECT_SQL, [])
+                async.apply(trx.query.bind(trx), SELECT_SQL)
             ], function (err, res) {
                 test.ifError(err);
                 test.equal(1, res[2].rowCount);
@@ -121,9 +121,9 @@ module.exports = {
     testTrxRollback: function (test) {
         this.pg.db.transaction(function (err, trx)  {
             async.series([
-                async.apply(trx.query.bind(trx), INSERT_SQL, []),
+                async.apply(trx.query.bind(trx), INSERT_SQL),
                 async.apply(trx.rollback.bind(trx)),
-                async.apply(trx.query.bind(trx), SELECT_SQL, [])
+                async.apply(trx.query.bind(trx), SELECT_SQL)
             ], function (err, res) {
                 test.ifError(err);
                 test.equal(0, res[2].rowCount);
@@ -134,8 +134,8 @@ module.exports = {
     testErrorTrx: function (test) {
         this.pg.db.transaction(function (err, trx)  {
             async.series([
-                async.apply(trx.query.bind(trx), INSERT_SQL, []),
-                async.apply(trx.query.bind(trx), 'SELECT * from wtf', []),
+                async.apply(trx.query.bind(trx), INSERT_SQL),
+                async.apply(trx.query.bind(trx), 'SELECT * from wtf'),
                 async.apply(trx.commit.bind(trx))
             ], function (err, res) {
                 test.ok(err);

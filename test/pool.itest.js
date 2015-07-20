@@ -37,7 +37,5 @@ var CREATE_TMP = 'CREATE TEMP TABLE beatles(name varchar(10), birthday timestamp
 
 exports.testDefaultPool = function (test) {
     test.ok(this.pg);
-    this.pg.db.query(CREATE_TMP, [], function (err, res) {
-        test.done();
-    });
+    this.pg.db.query(CREATE_TMP, test.done);
 };
