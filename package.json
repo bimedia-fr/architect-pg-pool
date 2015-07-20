@@ -4,7 +4,8 @@
   "description": "architect postgresql connection pool",
   "main": "src/index.js",
   "scripts": {
-    "test": "nodeunit test/*.test.js"
+    "test": "nodeunit test/*.test.js",
+    "integration-test": "nodeunit test/*.*test.js"
   },
   "repository": {
     "type": "git",
