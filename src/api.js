@@ -60,7 +60,7 @@ module.exports = function api(provider) {
                     var stream = handle.query(query);
                     stream.once('end', done);
                     stream.pipe(str);
-                    return callback && callback(str);
+                    return callback && callback(undefined, str);
                 });
             });
         }
