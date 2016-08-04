@@ -14,9 +14,7 @@
  */
 "use strict";
 
-var pg = require('pg'),
-    QueryStream = require('pg-query-stream'),
-    transaction = require('./transaction'),
+var QueryStream = require('pg-query-stream'),
     PassThrough = require('stream').PassThrough;
 
 function deferred(fn) {
@@ -27,25 +25,12 @@ function deferred(fn) {
     return str;
 }
 
-module.exports = function api(provider) {
-    var result = {
-        connection: provider,
-        query: function () {
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.splice(-1)[0];
+module.exports = function api(pool) {
 
-            result.connection(function (err, handle, done) {
-                if (err) {
-                    return callback(err);
-                }
-                var cb = function (err, res) {
-                    callback(err, res);
-                    done();
-                };
-                args.push(cb);
-                handle.query.apply(handle, args);
-            });
-        },
+    var result = {
+        _pool: pool,
+        connection: pool.connect.bind(pool),
+        query: pool.query.bind(pool),
         queryStream: function (sql, params, callback) {
             return deferred(function (str) {
                 result.connection(function (err, handle, done) {

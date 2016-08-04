@@ -28,7 +28,6 @@ module.exports = {
         pgpool({
             url: URI
         }, {}, function (err, res) {
-            //console.log(err, res);
             self.pg = res;
             self.pg.db.query(CREATE_TMP, function (err) {
                 self.pg.db.query(INSERT_SQL, done);
@@ -36,7 +35,9 @@ module.exports = {
         });
     },
     tearDown: function (done) {
-        this.pg.onDestroy();
+        if (this.pg) {
+            this.pg.onDestroy();
+        }
         done();
     },
     testQuery: function (test) {

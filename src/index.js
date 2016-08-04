@@ -41,18 +41,24 @@ module.exports = function setup(options, imports, register) {
     }
 
     function createPools(opts) {
+        var pools = [];
         var res = {
             db: {},
             onDestroy: function () {
+                pools.forEach(function (p) {
+                    p.end();
+                });
                 pg.end();
             }
         };
         if (opts.url) {
-            res.db = createPool(opts);
+            res.db = createPool(opts.url);
+            pools.push(res.db._pool);
         }
         Object.keys(opts).forEach(function (key) {
             if (opts[key] && opts[key].url) {
-                var pool = createPool(opts[key]);
+                var pool = createPool(opts[key].url);
+                pools.push(pool._pool);
                 res.db[key] = pool;
                 if (opts[key]['default']) {
                     Object.keys(pool).forEach(function (key) {

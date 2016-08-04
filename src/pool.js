@@ -15,13 +15,26 @@
 "use strict";
 
 var pg = require('pg'),
-    transaction = require('./transaction'),
+    url = require('url'),
     api = require('./api');
 
 module.exports = function (config) {
-    var provider = function (callback) {
-        return pg.connect(config.url, callback);
-    };
-    var result = api(provider);
-    return transaction(result);
+    var params, auth, pool;
+    if (typeof config === 'string') {
+        params = url.parse(config);
+        auth = params.auth ? params.auth.split(':') : [];
+        config = {
+            host: params.hostname,
+            port: params.port,
+            database: params.pathname.split('/')[1],
+            ssl: true,
+        };
+        if (auth.length > 0) {
+            config.user = auth[0];
+            config.password = auth[1];
+        }
+    }
+    pool = new pg.Pool(config);
+    pool.on('error', console.log);
+    return api(pool);
 };
