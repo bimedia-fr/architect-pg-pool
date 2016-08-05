@@ -70,7 +70,11 @@ module.exports = function setup(options, imports, register) {
         return res;
     }
 
-    var pools = createPools(options);
+    try {
+        var pools = createPools(options);
+    } catch (e) {
+        return register(e);
+    }
 
     if (options.checkOnStartUp) {
         var filtered = Object.keys(pools).filter(function (key) {

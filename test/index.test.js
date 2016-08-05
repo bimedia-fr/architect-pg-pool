@@ -34,6 +34,14 @@ module.exports = {
             test.done();
         });
     },
+    testInvalidUrlPool: function (test) {
+        pgpool({
+            url: 'postgresql://ssvsdvv:qsv[q%c4@host.com:5432/db?ssl=true'
+        }, {}, function (err) {
+            test.ok(err, 'expect a parse error on url');
+            test.done();
+        });
+    },
     testMultiPool: function (test) {
         pgpool({
             first: {
