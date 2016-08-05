@@ -70,8 +70,9 @@ module.exports = function setup(options, imports, register) {
         return res;
     }
 
+    var pools;
     try {
-        var pools = createPools(options);
+        pools = createPools(options);
     } catch (e) {
         return register(e);
     }
