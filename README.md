@@ -139,6 +139,21 @@ module.exports = function setup(options, imports, register) {
     register();
 };
 ```
+### Configuration
+
+* `url` either a connection url or an object :
+ * `host` : serveur hostname or ip
+ * `port` : serveur port
+ * `user` : username to login,
+ * `password` : password to login,
+ * `database`: database name,
+ * `application_name`: a name to identify client,
+ * `validationQuery`: a query to run to validate a connection
+ 
+* `checkOnStartup` : boolean, Whether we should try to validate configuration at startup.
+
+
+
 ### API
 The pool object (`db`) has the following methods :
 

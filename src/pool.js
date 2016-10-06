@@ -19,7 +19,7 @@ var pg = require('pg'),
     api = require('./api');
 
 module.exports = function (config) {
-    var params, auth, pool;
+    var params, auth, pool, query;
     if (typeof config === 'string') {
         params = url.parse(config);
         auth = params.auth ? params.auth.split(':') : [];
@@ -27,12 +27,21 @@ module.exports = function (config) {
             host: params.hostname,
             port: params.port,
             database: params.pathname.split('/')[1],
-            ssl: true,
+            ssl: true
         };
         if (auth.length > 0) {
             config.user = auth[0];
             config.password = auth[1];
         }
+    }
+    if (config.validationQuery) {
+        query = typeof config.validationQuery == 'string' ? config.validationQuery : 'SELECT 1';
+        config.validateAsync = function (con, cb) {
+            con.query(query, function (err, res) {
+                cb(!err && res);
+            });
+        };
+        delete config.validationQuery;
     }
     pool = new pg.Pool(config);
     pool.on('error', console.log);
