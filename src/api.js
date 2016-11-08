@@ -59,6 +59,10 @@ module.exports = function api(provider) {
                     var query = new QueryStream(sql, params);
                     var stream = handle.query(query);
                     stream.once('end', done);
+                    stream.once('error', function (err) {
+                        done(); // close conn on error
+                        str.emit('error', err); // emit error.
+                    });
                     stream.pipe(str);
                     return callback && callback(undefined, str);
                 });
