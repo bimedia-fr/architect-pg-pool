@@ -48,7 +48,6 @@ module.exports = function setup(options, imports, register) {
                 pools.forEach(function (p) {
                     p.end();
                 });
-                pg.end();
             }
         };
         if (opts.url) {
