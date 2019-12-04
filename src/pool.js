@@ -44,6 +44,5 @@ module.exports = function (config) {
         delete config.validationQuery;
     }
     pool = new pg.Pool(config);
-    pool.on('error', console.log);
     return api(pool);
 };
