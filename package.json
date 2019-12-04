@@ -1,6 +1,6 @@
 {
   "name": "architect-pg-pool",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "architect postgresql connection pool",
   "main": "src/index.js",
   "scripts": {
