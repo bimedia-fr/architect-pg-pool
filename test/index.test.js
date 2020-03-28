@@ -12,69 +12,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
-
+var assert = require('assert');
 var pgpool = require('../src/index');
 
 var URI = 'postgresql://localhost:5435/dbname';
 
-function assertPool(pool, test) {
+function assertPool(pool) {
+    var test = assert;
     test.ok(pool, 'pool is defined');
     ['connection', 'query', 'queryStream'].forEach(function (el) {
         test.equal(typeof pool[el], 'function', 'pool has a `' + el + '`  method');
     });
 }
-module.exports = {
-    testDefaultPool: function (test) {
-        pgpool({
-            url: URI
-        }, {}, function (err, res) {
-            test.ok(res.db, 'exports a *db* object to architect');
-            assertPool(res.db, test);
-            test.done();
-        });
-    },
-    testInvalidUrlPool: function (test) {
-        pgpool({
-            url: 'postgresql://ssvsdvv:qsv[q%c4@host.com:5432/db?ssl=true'
-        }, {}, function (err) {
-            test.ok(err, 'expect a parse error on url');
-            test.done();
-        });
-    },
-    testMultiPool: function (test) {
-        pgpool({
-            first: {
-                url: URI
-            },
-            second: {
-                url: URI
-            }
-        }, {}, function (err, res) {
 
-            test.ok(res.db, 'exports a *db* object to architect');
-            assertPool(res.db.first, test);
-            assertPool(res.db.second, test);
-            test.ok(!res.db.connection, 'there is no *default* pool : *db.connection* is not avaliable');
-            test.done();
-        });
-    },
-    testMultiPoolWithDefault: function (test) {
-        pgpool({
-            first: {
+describe('architect pg pool', function(){
+    describe('default pool', function() {
+        it('should export a *db* object to architect', function (done) {
+            pgpool({
                 url: URI
-            },
-            second: {
-                url: URI,
-                "default": true
-            }
-        }, {}, function (err, res) {
-
-            test.ok(res.db, 'exports a *db* object to architect');
-            assertPool(res.db.first, test);
-            assertPool(res.db.second, test);
-            assertPool(res.db, test);
-            test.done();
+            }, {}, function (err, res) {
+                assert.ifError(err);
+                assert.ok(res.db, 'exports a *db* object to architect');
+                assertPool(res.db);
+                done();
+            });
         });
-    }
-};
+        it('should throw an error with invalid url', function(done){
+            pgpool({
+                url: 'postgresql://ssvsdvv:qsv[q%c4@host.com:5432/db?ssl=true'
+            }, {}, function (err) {
+                assert.ok(err, 'expect a parse error on url');
+                done();
+            });    
+        });
+    });
+    describe('multipool', function () {
+        it('should export a db object', function (done) {
+            pgpool({
+                first: {
+                    url: URI
+                },
+                second: {
+                    url: URI
+                }
+            }, {}, function (err, res) {
+                assert.ifError(err);
+                assert.ok(res.db, 'exports a *db* object to architect');
+                assertPool(res.db.first);
+                assertPool(res.db.second);
+                assert.ok(!res.db.connection, 'there is no *default* pool : *db.connection* is not avaliable');
+                done();
+            });
+    
+        });
+    });
+    describe('multipool with default', function(){
+        it('should export a db object to architect', function (done) {
+            pgpool({
+                first: {
+                    url: URI
+                },
+                second: {
+                    url: URI,
+                    "default": true
+                }
+            }, {}, function (err, res) {
+                assert.ifError(err);
+                assert.ok(res.db, 'exports a *db* object to architect');
+                assertPool(res.db.first);
+                assertPool(res.db.second);
+                assertPool(res.db);
+                done();
+            });
+        });
+    });
+});

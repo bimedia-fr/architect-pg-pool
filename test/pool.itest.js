@@ -12,66 +12,83 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
+var assert = require("assert"),
+  pgpool = require("../src/index"),
+  async = require("async");
 
-var pgpool = require('../src/index'),
-    async = require('async');
+var URI =
+  process.env.PG_CON || "postgresql://testuser:hu8jmn3@localhost:5432/testdb";
+var CREATE_TMP =
+  "CREATE TEMP TABLE beatles(name varchar(25), birthday timestamp)";
+var INSERT_SQL =
+  "INSERT INTO beatles VALUES ('John Lennon', date('1940-10-09'))";
+var SELECT_SQL = "SELECT * from beatles";
 
-var URI = process.env.PG_CON || 'postgresql://localhost:5432/postgres';
-var CREATE_TMP = 'CREATE TEMP TABLE beatles(name varchar(25), birthday timestamp)';
-var INSERT_SQL = 'INSERT INTO beatles VALUES (\'John Lennon\', date(\'1940-10-09\'))';
-var SELECT_SQL = 'SELECT * from beatles';
-
-exports.setUp = function (done) {
-    var self = this;
-    pgpool({
-        url: {
-            user: 'postgres',
-            database: 'postgres',
-            password: 'postgres',
-            max: 2
+var pg;
+before(function() {
+  return new Promise(function(resolve, reject) {
+    pgpool(
+      {
+        url: URI,
+        max: 2
+      },
+      {},
+      function(err, res) {
+        if (err) {
+          return reject(err);
         }
-    }, {}, function (err, res) {
-        self.pg = res;
-        self.pg.db.query(CREATE_TMP, function (err) {
-            self.pg.db.query(INSERT_SQL, done);
+        pg = res;
+        pg.db.query(CREATE_TMP, function(err) {
+          if (err) {
+            return reject(err);
+          }
+          pg.db.query(INSERT_SQL, resolve);
         });
-    });
-};
+      }
+    );
+  });
+});
 
-exports.tearDown = function (done) {
-    if (this.pg) {
-        this.pg.onDestroy();
+after(function() {
+  return new Promise(function(resolve, reject) {
+    if (pg) {
+      pg.onDestroy();
     }
-    done();
-};
+    resolve();
+  });
+});
 
-exports.testDefaultPool = function (test) {
-    test.ok(this.pg);
-    this.pg.db.query(SELECT_SQL, test.done);
-};
-
-exports.testPoolRecoreryAfterExhaustion = function (test) {
-    var self = this, count = 0;
-    test.ok(self.pg);
-    function borrow(cb) {
-        self.pg.db.query(SELECT_SQL, function (err, res) {
-            if (!err) {
-                count++;
-            }
-            cb(err, res);
+describe("architect pg pool", function() {
+  describe("default pool", function() {
+    it("should return a valid pool", function(done) {
+      assert.ok(pg);
+      pg.db.query(SELECT_SQL, done);
+    });
+  });
+  describe("pool", function() {
+    it("should recover after exhaustion", function(done) {
+      count = 0;
+      assert.ok(pg);
+      function borrow(cb) {
+        pg.db.query(SELECT_SQL, function(err, res) {
+          if (!err) {
+            count++;
+          }
+          cb(err, res);
         });
-    }
-    async.parallel([
-        borrow,
-        borrow,
-        borrow,
-        borrow,
-        borrow,
-        borrow
-    ], function (err, res) {
-        test.ifError(err);
-        test.equal(6, count);
-        test.done();
+      }
+      async.parallel([borrow, borrow, borrow, borrow, borrow, borrow], function(
+        err,
+        res
+      ) {
+        assert.ifError(err);
+        assert.equal(6, count);
+        done();
+      });
     });
-};
+  });
+});
+
+exports.testDefaultPool = function(test) {};
+
+exports.testPoolRecoreryAfterExhaustion = function(test) {};
