@@ -30,7 +30,7 @@ module.exports = function setup(options, imports, register) {
     }
 
     function checkConnection(pool) {
-        return pool.connection(client => {
+        return pool.connection().then(client => {
             client.release();
         }).catch(err => {
             throw new Error('unable to create pg connection to ' + pool.url + ' : ' + err);
