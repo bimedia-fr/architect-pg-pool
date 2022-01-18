@@ -15,7 +15,6 @@
 "use strict";
 
 var createPool = require('./pool');
-var async = require('async');
 var pg = require('pg');
 
 var TSTAMP_WO_TZ =  1114;
@@ -30,13 +29,11 @@ module.exports = function setup(options, imports, register) {
         });
     }
 
-    function checkConnection(pool, cb) {
-        pool.connection(function (err, handle, done) {
-            if (err) {
-                return cb(new Error('unable to create pg connection to ' + pool.url + ' : ' + err));
-            }
-            done();
-            cb();
+    function checkConnection(pool) {
+        return pool.connection(client => {
+            client.release();
+        }).catch(err => {
+            throw new Error('unable to create pg connection to ' + pool.url + ' : ' + err);
         });
     }
 
@@ -82,13 +79,11 @@ module.exports = function setup(options, imports, register) {
         }).map(function (el) {
             return pools[el];
         });
-        async.each(filtered, checkConnection, function (err) {
-            if (err) {
-                return register(err);
-            }
+        return Promise.all(filtered.map(checkConnection)).then(result => {
             register(null, pools);
+        }).catch(err => {
+            return register(err);
         });
-    } else {
-        register(null, pools);
     }
+    register(null, pools);
 };
