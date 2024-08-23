@@ -18,7 +18,7 @@ var pg = require('pg'),
     url = require('url'),
     api = require('./api');
 
-module.exports = function (config) {
+module.exports = function (config, log) {
     var params, auth, pool, query;
     if (typeof config === 'string') {
         params = url.parse(config);
@@ -44,5 +44,8 @@ module.exports = function (config) {
         delete config.validationQuery;
     }
     pool = new pg.Pool(config);
+    pool.on('error', () => {
+        log.error('pg pool recieved an error', err);
+    });
     return api(pool);
 };

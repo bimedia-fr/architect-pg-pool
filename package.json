@@ -26,11 +26,6 @@
     "pg": "^8.7.1",
     "pg-query-stream": "^3.4.2"
   },
-  "plugin": {
-    "provides": [
-      "db"
-    ]
-  },
   "devDependencies": {
     "mocha": "^10.2.0"
   }

@@ -14,6 +14,7 @@
  */
 var assert = require('assert');
 var pgpool = require('../src/index');
+var logger = require('./logger.mock');
 
 var URI = 'postgresql://localhost:5435/dbname';
 
@@ -30,7 +31,7 @@ describe('architect pg pool', function(){
         it('should export a *db* object to architect', function (done) {
             pgpool({
                 url: URI
-            }, {}, function (err, res) {
+            }, {log: logger}, function (err, res) {
                 assert.ifError(err);
                 assert.ok(res.db, 'exports a *db* object to architect');
                 assertPool(res.db);
@@ -40,7 +41,7 @@ describe('architect pg pool', function(){
         it('should throw an error with invalid url', function(done){
             pgpool({
                 url: 'postgresql://ssvsdvv:qsv[q%c4@host.com:5432/db?ssl=true'
-            }, {}, function (err) {
+            }, {log: logger}, function (err) {
                 assert.ok(err, 'expect a parse error on url');
                 done();
             });    
@@ -55,7 +56,7 @@ describe('architect pg pool', function(){
                 second: {
                     url: URI
                 }
-            }, {}, function (err, res) {
+            }, {log: logger}, function (err, res) {
                 assert.ifError(err);
                 assert.ok(res.db, 'exports a *db* object to architect');
                 assertPool(res.db.first);
@@ -76,7 +77,7 @@ describe('architect pg pool', function(){
                     url: URI,
                     "default": true
                 }
-            }, {}, function (err, res) {
+            }, {log: logger}, function (err, res) {
                 assert.ifError(err);
                 assert.ok(res.db, 'exports a *db* object to architect');
                 assertPool(res.db.first);

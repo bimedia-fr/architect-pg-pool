@@ -1,4 +1,3 @@
-/*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 /* 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,14 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
 
-var createPool = require('./pool');
-var pg = require('pg');
+const createPool = require('./pool');
+const pg = require('pg');
 
-var TSTAMP_WO_TZ =  1114;
+const TSTAMP_WO_TZ =  1114;
 
 module.exports = function setup(options, imports, register) {
+
+    const logger = imports.log;
 
     if (!options.defaultTimezoneUTC) {
         var oldParser = pg.types.getTypeParser(TSTAMP_WO_TZ);
@@ -48,12 +48,12 @@ module.exports = function setup(options, imports, register) {
             }
         };
         if (opts.url) {
-            res.db = createPool(opts.url);
+            res.db = createPool(opts.url, logger.getLogger('pg-default'));
             pools.push(res.db._pool);
         }
         Object.keys(opts).forEach(function (key) {
             if (opts[key] && opts[key].url) {
-                var pool = createPool(opts[key].url);
+                var pool = createPool(opts[key].url, logger.getLogger('pg-' + key));
                 pools.push(pool._pool);
                 res.db[key] = pool;
                 if (opts[key]['default']) {
@@ -67,7 +67,7 @@ module.exports = function setup(options, imports, register) {
     }
 
     var pools;
-    try {
+    try {
         pools = createPools(options);
     } catch (e) {
         return register(e);
@@ -87,3 +87,6 @@ module.exports = function setup(options, imports, register) {
     }
     register(null, pools);
 };
+
+module.exports.consumes = ['log']
+module.exports.provides = ['db']
