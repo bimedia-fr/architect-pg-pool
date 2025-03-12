@@ -48,12 +48,12 @@ module.exports = function setup(options, imports, register) {
             }
         };
         if (opts.url) {
-            res.db = createPool(opts.url, logger.getLogger('pg-default'));
+            res.db = createPool('default', opts.url, logger.getLogger('pg-default'));
             pools.push(res.db._pool);
         }
         Object.keys(opts).forEach(function (key) {
             if (opts[key] && opts[key].url) {
-                var pool = createPool(opts[key].url, logger.getLogger('pg-' + key));
+                var pool = createPool(key, opts[key].url, logger.getLogger('pg-' + key));
                 pools.push(pool._pool);
                 res.db[key] = pool;
                 if (opts[key]['default']) {
