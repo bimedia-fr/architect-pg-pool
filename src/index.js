@@ -20,6 +20,7 @@ const TSTAMP_WO_TZ =  1114;
 module.exports = function setup(options, imports, register) {
 
     const logger = imports.log;
+    const log = logger.getLogger('pg');
 
     if (!options.defaultTimezoneUTC) {
         var oldParser = pg.types.getTypeParser(TSTAMP_WO_TZ);
@@ -29,11 +30,15 @@ module.exports = function setup(options, imports, register) {
         });
     }
 
-    function checkConnection(pool) {
-        return pool.connection().then(client => {
+    function checkConnection(key) {
+        log.info(`Check: "${key}" started`);
+        let timer = Date.now();
+        return pools.db[key].connection().then(client => {
             client.release();
+            log.info(`Check: "${key}" connection OK (${Date.now() - timer}ms)`);
         }).catch(err => {
-            throw new Error('unable to create pg connection to ' + pool.url + ' : ' + err);
+            log.error(`Check: "${key}" connection Failed (${Date.now() - timer}ms)`);
+            throw new Error('unable to create pg connection to ' + pools.db[key] + ' : ' + err);
         });
     }
 
@@ -68,16 +73,19 @@ module.exports = function setup(options, imports, register) {
 
     var pools;
     try {
+        log.debug('Creating pools');
         pools = createPools(options);
     } catch (e) {
+        log.error('Error creating pools', e);
         return register(e);
     }
 
     if (options.checkOnStartUp) {
-        var filtered = Object.keys(pools).filter(function (key) {
-            return pools[key].connection;
-        }).map(function (el) {
-            return pools[el];
+        log.info('Checking Pools connections on startup');
+        let filtered = Object.keys(pools.db).filter(function (key) {
+            return pools.db[key].connection;
+        }).map(function (key) {
+            return key;
         });
         return Promise.all(filtered.map(checkConnection)).then(result => {
             register(null, pools);
