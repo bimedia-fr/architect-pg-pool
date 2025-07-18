@@ -15,7 +15,13 @@
 var assert = require('assert');
 var pgpool = require('../src/index');
 
-var URI = process.env.PG_CON || 'postgresql://testuser:hu8jmn3@localhost:5432/testdb';
+var URI = {
+    user: 'testuser',
+    password: 'hu8jmn3',
+    host: 'localhost',
+    port: 5432,
+    database: 'testdb'
+};
 var CREATE_TMP = 'CREATE TEMP TABLE beatles(name varchar(25), birthday timestamp)';
 var INSERT_SQL = 'INSERT INTO beatles VALUES (\'John Lennon\', date(\'1940-10-09\'))';
 var SELECT_SQL = 'SELECT * from beatles';
@@ -24,17 +30,17 @@ var pg;
 before(function() {
     return new Promise(function(resolve, reject) {
         pgpool({
-            url: URI
+            poolname: URI
         }, {}, function (err, res) {
             if (err) {
                 return reject(err);
             }
             pg = res;
-            pg.db.query(CREATE_TMP, function (err) {
+            pg.db.poolname.query(CREATE_TMP, function (err) {
                 if (err) {
                     return reject(err);
                 }
-                pg.db.query(INSERT_SQL, resolve);
+                pg.db.poolname.query(INSERT_SQL, resolve);
             });
         });
     });
@@ -52,7 +58,7 @@ after(function (){
 describe('architect pg pool', function () {
     describe('query', function() {
         it('should query database', function (done) {
-            pg.db.query(SELECT_SQL, function (err, res) {
+            pg.db.poolname.query(SELECT_SQL, function (err, res) {
                 assert.ifError(err);
                 assert.equal(res.rows[0].name, 'John Lennon');
                 done();
@@ -61,7 +67,7 @@ describe('architect pg pool', function () {
     });
     describe('connection', function () {
         it('should return a valid pg connection', function(done) {
-            pg.db.connection(function (err, con, close) {
+            pg.db.poolname.connection(function (err, con, close) {
                 assert.ifError(err);
                 assert.ok(con);
                 close();
@@ -71,7 +77,7 @@ describe('architect pg pool', function () {
     });
     describe('select stream', function(){
         it('should return a result stream', function (done){
-            var stream = pg.db.queryStream(SELECT_SQL);
+            var stream = pg.db.poolname.queryStream(SELECT_SQL);
             var count = 0;
             stream.on('data', function (chunk) {
                 assert.ok(chunk);

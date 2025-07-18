@@ -17,6 +17,34 @@ const pg = require('pg');
 
 const TSTAMP_WO_TZ =  1114;
 
+/**
+ * @typedef {Object.<string, import('./pool').PoolConfig>} ModulePoolsConfig
+ */
+
+/**
+ * @typedef {Object} ModuleOptions
+ * @property {String} [defaultTimezoneUTC] - If set, the default timezone will be UTC
+ * @property {Boolean} [checkOnStartUp] - If true, check the connection to the database on startup
+ * @property {ModulePoolsConfig} pools - Configuration for the database pools
+ */
+
+/**
+ * @typedef {Object} ModuleExport
+ * @property {Object.<string, import('./api').PoolAPI>} db
+ * @property {Function} onDestroy
+ */
+
+/**
+ * @typedef {Object} ModuleImports
+ * @property {import('node:stream').EventEmitter} hub
+ * @property {import('architect-log4js').Log4jsWithRequest} log
+ */
+
+/**
+ * @param {ModuleOptions} options
+ * @param {ModuleImports} imports
+ * @param  {function (Error|null, ModuleExport|null):void}  register
+ */
 module.exports = function setup(options, imports, register) {
 
     const logger = imports.log;
@@ -30,6 +58,11 @@ module.exports = function setup(options, imports, register) {
         });
     }
 
+    /**
+     * Check the connection to the database
+     * @param {String} key - The key of the database connection
+     * @returns {Promise<void>}
+     */
     function checkConnection(key) {
         log.info(`Check: "${key}" started`);
         let timer = Date.now();
@@ -42,9 +75,21 @@ module.exports = function setup(options, imports, register) {
         });
     }
 
+    /**
+     * Create a pool of database connections
+     * @param {ModulePoolsConfig} opts
+     * @returns {ModuleExport} The created pools
+     */
     function createPools(opts) {
-        var pools = [];
-        var res = {
+        /**
+         * @type {import('pg').Pool[]}
+         */
+        let pools = [];
+
+        /**
+         * @type {ModuleExport} - The pools object
+         */
+        let res = {
             db: {},
             onDestroy: function () {
                 pools.forEach(function (p) {
@@ -52,20 +97,12 @@ module.exports = function setup(options, imports, register) {
                 });
             }
         };
-        if (opts.url) {
-            res.db = createPool('default', opts.url, logger.getLogger('pg-default'));
-            pools.push(res.db._pool);
-        }
+
         Object.keys(opts).forEach(function (key) {
-            if (opts[key] && opts[key].url) {
-                var pool = createPool(key, opts[key].url, logger.getLogger('pg-' + key));
+            if (opts[key]) {
+                var pool = createPool(key, opts[key], logger.getLogger('pg-' + key));
                 pools.push(pool._pool);
                 res.db[key] = pool;
-                if (opts[key]['default']) {
-                    Object.keys(pool).forEach(function (key) {
-                        res.db[key] = pool[key];
-                    });
-                }
             }
         });
         return res;
@@ -73,11 +110,12 @@ module.exports = function setup(options, imports, register) {
 
     var pools;
     try {
-        log.debug('Creating pools');
-        pools = createPools(options);
+        log.debug('Creating pools', Object.keys(options.pools));
+        pools = createPools(options.pools || {});
     } catch (e) {
         log.error('Error creating pools', e);
-        return register(e);
+        const err = e instanceof Error ? e : new Error(String(e));
+        return register(err, null);
     }
 
     if (options.checkOnStartUp) {
@@ -90,7 +128,7 @@ module.exports = function setup(options, imports, register) {
         return Promise.all(filtered.map(checkConnection)).then(result => {
             register(null, pools);
         }).catch(err => {
-            return register(err);
+            return register(err, null);
         });
     }
     register(null, pools);

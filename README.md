@@ -13,7 +13,15 @@ npm install --save architect-pg-pool
 ```js
 module.exports = [{
     packagePath: "architect-pg-pool",
-    url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname',
+    pools: {
+        poolname: {
+            user: 'dbuser',
+            password: process.env.DB_PASSWORD,
+            host: 'db.example.com',
+            port: 5432,
+            database: 'dbname'
+        }
+    }
     checkOnStartUp : true
 }];
 ```
@@ -45,7 +53,20 @@ Configure Architect with `config.js` :
 ```js
 module.exports = [{
     packagePath: "architect-pg-pool",
-    url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname'
+    pools: {
+        poolname: {
+            user: 'dbuser',
+            password: process.env.DB_PASSWORD,
+            host: 'db.example.com',
+            port: 5432,
+            database: 'dbname',
+            ssl: {
+                rejectUnauthorized: false
+            },
+            application_name: 'myapp',
+            max: 2
+        }
+    }
 }, './routes'];
 ```
 
@@ -72,7 +93,7 @@ module.exports = function setup(options, imports, register) {
 
     // register routes 
     rest.get('/hello/:name', function (req, res, next) {
-        db.query('SELECT * FROM Users WHERE id=$1', [req.params.name], function(err, res){
+        db.poolname.query('SELECT * FROM Users WHERE id=$1', [req.params.name], function(err, res){
             res.write("{'message':'hello," + res.rows[0].name + "'}");
             res.end();
         });
@@ -88,42 +109,26 @@ Here is how to define 2 different pools :
 ```js
 module.exports = [{
     packagePath: "architect-pg-pool",
-    first : {
-    	url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname'
-    },
-	second : {
-    	url: 'postgresql://postgresuser:postgrespwd@localhost:5432/otherdb'
-    },
+    pools: {
+        first : {
+            user: 'postgresuser',
+            password: 'postgrespwd',
+            host: 'localhost',
+            port: 5432,
+            database: 'dbname'
+        },
+        second : {
+            user: 'postgresuser',
+            password: 'postgrespwd',
+            host: 'localhost',
+            port: 5435,
+            database: 'otherdb'
+        },
+    }
     checkOnStartUp : true
 }];
 ```
 
-This will create 2 properties (`first` and `second`) in the `db` object.
-```js
-module.exports = function setup(options, imports, register) {
-    var db = imports.db;
-    db.first.connection(function (err, client) {
-      client.query(/*...*/);
-    });    
-    register();
-};
-```
-#### default pool
-A pool can be marked as default and will be available in `db.connection`.
-Here is how to define 2 different pools with the second as default :
-```js
-module.exports = [{
-    packagePath: "architect-pg-pool",
-    first : {
-    	url: 'postgresql://postgresuser:postgrespwd@localhost:5435/dbname'
-    },
-	second : {
-    	url: 'postgresql://postgresuser:postgrespwd@localhost:5432/otherdb',
-        'default' : true
-    },
-    checkOnStartUp : true
-}];
-```
 This will create 2 properties (`first` and `second`) in the `db` object.
 ```js
 module.exports = function setup(options, imports, register) {
@@ -141,7 +146,12 @@ module.exports = function setup(options, imports, register) {
 ```
 ### Configuration
 
-* `url` either a connection url or an object :
+* `pools` object : an object with each keys containing a Pool Config. 
+* `checkOnStartup` : boolean, Whether we should try to validate configuration at startup.
+
+
+#### Pool config
+
  * `host` : serveur hostname or ip
  * `port` : serveur port
  * `user` : username to login,
@@ -149,13 +159,11 @@ module.exports = function setup(options, imports, register) {
  * `database`: database name,
  * `application_name`: a name to identify client,
  * `validationQuery`: a query to run to validate a connection
- 
-* `checkOnStartup` : boolean, Whether we should try to validate configuration at startup.
 
-
+Please refer to node pg module for details on available options.
 
 ### API
-The pool object (`db`) has the following methods :
+The pool object has the following methods :
 
 #### connection
 Retreive a connection from the pool. The method takes a callback as parameter. Once the connection is avaliable the callback is called with an :
@@ -203,7 +211,7 @@ var JSONSteam = require('JSONStream');
 
 module.exports = function setup(options, imports, register) {
     var db = imports.db;
-    db.queryStream('SELECT * from USERS')
+    db.poolname.queryStream('SELECT * from USERS')
         .pipe(JSONSteam.stringify())
         .pipe(process.stdout);
     //...

@@ -5,7 +5,10 @@
   "main": "src/index.js",
   "scripts": {
     "test": "mocha test/*.test.js",
-    "integration-test": "mocha test/*.*test.js"
+    "integration-test": "mocha test/*.*test.js",
+    "types": "tsc",
+    "preversion": "eslint src && tsc && npm test",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
@@ -27,6 +30,10 @@
     "pg-query-stream": "^3.4.2"
   },
   "devDependencies": {
-    "mocha": "^10.2.0"
+    "@types/node": "^20.19.8",
+    "@types/pg": "^8.15.4",
+    "architect-log4js": "^4.2.1",
+    "mocha": "^10.2.0",
+    "typescript": "^5.8.3"
   }
 }
