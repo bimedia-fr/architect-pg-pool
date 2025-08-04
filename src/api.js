@@ -1,4 +1,3 @@
-/*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +12,16 @@
  * limitations under the License.
  */
 
-var QueryStream = require('pg-query-stream'),
+const QueryStream = require('pg-query-stream'),
     PassThrough = require('stream').PassThrough;
 
+/**
+ * Create a deferred stream.
+ * @param {Function} fn callback function that will be called with the stream
+ * @returns {PassThrough}
+ */
 function deferred(fn) {
-    var str = new PassThrough({
+    const str = new PassThrough({
         'objectMode': true
     });
     fn(str);
@@ -54,8 +58,8 @@ module.exports = function api(pool) {
                         str.emit('error', error);
                         return;
                     }
-                    var query = new QueryStream(sql, params);
-                    var stream = handle.query(query);
+                    const query = new QueryStream(sql, params);
+                    const stream = handle.query(query);
                     stream.once('end', done);
                     stream.once('error', function (err) {
                         done(); // close conn on error

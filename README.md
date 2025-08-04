@@ -70,7 +70,7 @@ module.exports = [{
 }, './routes'];
 ```
 
-Consume *db* plugin in your `./routes/package.json` :
+Consume *pgdb* plugin in your `./routes/package.json` :
 
 ```js
 {
@@ -80,7 +80,7 @@ Consume *db* plugin in your `./routes/package.json` :
   "private": true,
 
   "plugin": {
-    "consumes": ["db"]
+    "consumes": ["pgdb"]
   }
 }
 ```
@@ -89,7 +89,7 @@ Eventually use pg connection in your routes `./routes/index.js` :
 ```js
 module.exports = function setup(options, imports, register) {
     var rest = imports.rest;
-    var db = imports.db;
+    var db = imports.pgdb;
 
     // register routes 
     rest.get('/hello/:name', function (req, res, next) {
@@ -129,10 +129,10 @@ module.exports = [{
 }];
 ```
 
-This will create 2 properties (`first` and `second`) in the `db` object.
+This will create 2 properties (`first` and `second`) in the `pgdb` object.
 ```js
 module.exports = function setup(options, imports, register) {
-    var db = imports.db;
+    var db = imports.pgdb;
     // this will use second pool
     db.connection(function (err, client) {
       client.query(/*...*/);
@@ -185,7 +185,7 @@ Once the data is ready the callback is fired with an :
 
 ```js
 module.exports = function setup(options, imports, register) {
-    var db = imports.db;
+    var db = imports.pgdb;
     
     db.query('SELECT * from USERS', function (err, res) {
         res.rows.forEach(console.log);
@@ -210,7 +210,7 @@ Once the stream is ready the callback is fired with an :
 var JSONSteam = require('JSONStream');
 
 module.exports = function setup(options, imports, register) {
-    var db = imports.db;
+    var db = imports.pgdb;
     db.poolname.queryStream('SELECT * from USERS')
         .pipe(JSONSteam.stringify())
         .pipe(process.stdout);

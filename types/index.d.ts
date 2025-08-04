@@ -25,13 +25,13 @@ type ModuleOptions = {
     pools: ModulePoolsConfig;
 };
 type ModuleExport = {
-    db: {
+    pgdb: {
         [x: string]: import("./api").PoolAPI;
     };
     onDestroy: Function;
 };
 type ModuleImports = {
-    hub: import("node:stream").EventEmitter;
+    hub: import("node:events").EventEmitter;
     log: import("architect-log4js").Log4jsWithRequest;
 };
 import createPool = require("./pool");

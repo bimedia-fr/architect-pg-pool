@@ -30,13 +30,13 @@ const TSTAMP_WO_TZ =  1114;
 
 /**
  * @typedef {Object} ModuleExport
- * @property {Object.<string, import('./api').PoolAPI>} db
+ * @property {Object.<string, import('./api').PoolAPI>} pgdb
  * @property {Function} onDestroy
  */
 
 /**
  * @typedef {Object} ModuleImports
- * @property {import('node:stream').EventEmitter} hub
+ * @property {import('node:events').EventEmitter} hub
  * @property {import('architect-log4js').Log4jsWithRequest} log
  */
 
@@ -65,7 +65,7 @@ module.exports = function setup(options, imports, register) {
      */
     function checkConnection(key) {
         log.info(`Check: "${key}" started`);
-        let timer = Date.now();
+        const timer = Date.now();
         return pools.db[key].connection().then(client => {
             client.release();
             log.info(`Check: "${key}" connection OK (${Date.now() - timer}ms)`);
@@ -84,13 +84,13 @@ module.exports = function setup(options, imports, register) {
         /**
          * @type {import('pg').Pool[]}
          */
-        let pools = [];
+        const pools = [];
 
         /**
          * @type {ModuleExport} - The pools object
          */
         let res = {
-            db: {},
+            pgdb: {},
             onDestroy: function () {
                 pools.forEach(function (p) {
                     p.end();
@@ -102,13 +102,13 @@ module.exports = function setup(options, imports, register) {
             if (opts[key]) {
                 var pool = createPool(key, opts[key], logger.getLogger('pg-' + key));
                 pools.push(pool._pool);
-                res.db[key] = pool;
+                res.pgdb[key] = pool;
             }
         });
         return res;
     }
 
-    var pools;
+    let pools;
     try {
         log.debug('Creating pools', Object.keys(options.pools));
         pools = createPools(options.pools || {});
@@ -120,8 +120,8 @@ module.exports = function setup(options, imports, register) {
 
     if (options.checkOnStartUp) {
         log.info('Checking Pools connections on startup');
-        let filtered = Object.keys(pools.db).filter(function (key) {
-            return pools.db[key].connection;
+        let filtered = Object.keys(pools.pgdb).filter(function (key) {
+            return pools.pgdb[key].connection;
         }).map(function (key) {
             return key;
         });
@@ -135,4 +135,4 @@ module.exports = function setup(options, imports, register) {
 };
 
 module.exports.consumes = ['log']
-module.exports.provides = ['db']
+module.exports.provides = ['pgdb']
