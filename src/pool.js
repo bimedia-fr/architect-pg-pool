@@ -1,4 +1,3 @@
-/*jslint node : true, nomen: true, plusplus: true, vars: true, eqeq: true,*/
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,27 +11,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
-
-var pg = require('pg'),
-    url = require('url'),
+const pg = require('pg'),
     api = require('./api');
+/** 
+ * @typedef {Object} CustomPoolConfig
+ * @property {String} [validationQuery] - A query to validate the connection
+ * @property {Function} [validateAsync] - A function to validate the connection asynchronously
+ */
 
+/**
+ * @typedef {pg.PoolConfig & CustomPoolConfig} PoolConfig
+ */
+
+/**
+ * Create a PostgreSQL connection pool.
+ * @param {string} name - The name of the pool.
+ * @param {PoolConfig} config - The connection configuration.
+ * @param {import('log4js').Logger} log - The logger instance.
+ * @returns {import('./api').PoolAPI} - The PostgreSQL connection pool.
+ */
 module.exports = function (name, config, log) {
-    var params, auth, pool, query;
+    let pool, query;
     if (typeof config === 'string') {
-        params = url.parse(config);
-        auth = params.auth ? params.auth.split(':') : [];
-        config = {
-            host: params.hostname,
-            port: params.port,
-            database: params.pathname.split('/')[1],
-            ssl: true
-        };
-        if (auth.length > 0) {
-            config.user = auth[0];
-            config.password = auth[1];
-        }
+        // url as string is unsupported
+        throw new Error('String connection URLs are not supported. Use an object instead.');
     }
     if (config.validationQuery) {
         query = typeof config.validationQuery == 'string' ? config.validationQuery : 'SELECT 1';

@@ -16,7 +16,11 @@ var assert = require('assert');
 var pgpool = require('../src/index');
 var logger = require('./logger.mock');
 
-var URI = 'postgresql://localhost:5435/dbname';
+var URI = {
+    host: 'localhost',
+    port: 5435,
+    database: 'dbname'
+};
 
 function assertPool(pool) {
     var test = assert;
@@ -26,21 +30,22 @@ function assertPool(pool) {
     });
 }
 
-describe('architect pg pool', function(){
-    describe('default pool', function() {
-        it('should export a *db* object to architect', function (done) {
-            pgpool({
-                url: URI
+describe('architect pg pool', function() {
+    describe('default pool', function() {
+        it('should export a *pgdb* object to architect', function (done) {
+            pgpool({pools: {
+                poolname: URI
+            }
             }, {log: logger}, function (err, res) {
                 assert.ifError(err);
-                assert.ok(res.db, 'exports a *db* object to architect');
-                assertPool(res.db);
+                assert.ok(res.pgdb, 'exports a *pgdb* object to architect');
+                assertPool(res.pgdb.poolname);
                 done();
             });
         });
-        it('should throw an error with invalid url', function(done){
+        it('should throw an error with an url', function(done){
             pgpool({
-                url: 'postgresql://ssvsdvv:qsv[q%c4@host.com:5432/db?ssl=true'
+                url: 'postgresql://localhost:5435/dbname'
             }, {log: logger}, function (err) {
                 assert.ok(err, 'expect a parse error on url');
                 done();
@@ -48,41 +53,39 @@ describe('architect pg pool', function(){
         });
     });
     describe('multipool', function () {
-        it('should export a db object', function (done) {
-            pgpool({
+        it('should export a pgdb object', function (done) {
+            pgpool({ pools: {
                 first: {
-                    url: URI
+                    URI
                 },
                 second: {
-                    url: URI
+                    URI
                 }
+            }
             }, {log: logger}, function (err, res) {
                 assert.ifError(err);
-                assert.ok(res.db, 'exports a *db* object to architect');
-                assertPool(res.db.first);
-                assertPool(res.db.second);
-                assert.ok(!res.db.connection, 'there is no *default* pool : *db.connection* is not avaliable');
+                assert.ok(res.pgdb, 'exports a *db* object to architect');
+                assertPool(res.pgdb.first);
+                assertPool(res.pgdb.second);
                 done();
             });
     
         });
     });
     describe('multipool with default', function(){
-        it('should export a db object to architect', function (done) {
-            pgpool({
+        it('should export a pgdb object to architect', function (done) {
+            pgpool({pools: {
                 first: {
                     url: URI
                 },
                 second: {
                     url: URI,
-                    "default": true
                 }
-            }, {log: logger}, function (err, res) {
+            }}, {log: logger}, function (err, res) {
                 assert.ifError(err);
-                assert.ok(res.db, 'exports a *db* object to architect');
-                assertPool(res.db.first);
-                assertPool(res.db.second);
-                assertPool(res.db);
+                assert.ok(res.pgdb, 'exports a *pgdb* object to architect');
+                assertPool(res.pgdb.first);
+                assertPool(res.pgdb.second);
                 done();
             });
         });

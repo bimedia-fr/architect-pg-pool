@@ -17,6 +17,34 @@ const pg = require('pg');
 
 const TSTAMP_WO_TZ =  1114;
 
+/**
+ * @typedef {Object.<string, import('./pool').PoolConfig>} ModulePoolsConfig
+ */
+
+/**
+ * @typedef {Object} ModuleOptions
+ * @property {String} [defaultTimezoneUTC] - If set, the default timezone will be UTC
+ * @property {Boolean} [checkOnStartUp] - If true, check the connection to the database on startup
+ * @property {ModulePoolsConfig} pools - Configuration for the database pools
+ */
+
+/**
+ * @typedef {Object} ModuleExport
+ * @property {Object.<string, import('./api').PoolAPI>} pgdb
+ * @property {Function} onDestroy
+ */
+
+/**
+ * @typedef {Object} ModuleImports
+ * @property {import('node:events').EventEmitter} hub
+ * @property {import('architect-log4js').Log4jsWithRequest} log
+ */
+
+/**
+ * @param {ModuleOptions} options
+ * @param {ModuleImports} imports
+ * @param  {function (Error|null, ModuleExport|null):void}  register
+ */
 module.exports = function setup(options, imports, register) {
 
     const logger = imports.log;
@@ -30,9 +58,14 @@ module.exports = function setup(options, imports, register) {
         });
     }
 
+    /**
+     * Check the connection to the database
+     * @param {String} key - The key of the database connection
+     * @returns {Promise<void>}
+     */
     function checkConnection(key) {
         log.info(`Check: "${key}" started`);
-        let timer = Date.now();
+        const timer = Date.now();
         return pools.db[key].connection().then(client => {
             client.release();
             log.info(`Check: "${key}" connection OK (${Date.now() - timer}ms)`);
@@ -42,59 +75,64 @@ module.exports = function setup(options, imports, register) {
         });
     }
 
+    /**
+     * Create a pool of database connections
+     * @param {ModulePoolsConfig} opts
+     * @returns {ModuleExport} The created pools
+     */
     function createPools(opts) {
-        var pools = [];
-        var res = {
-            db: {},
+        /**
+         * @type {import('pg').Pool[]}
+         */
+        const pools = [];
+
+        /**
+         * @type {ModuleExport} - The pools object
+         */
+        let res = {
+            pgdb: {},
             onDestroy: function () {
                 pools.forEach(function (p) {
                     p.end();
                 });
             }
         };
-        if (opts.url) {
-            res.db = createPool('default', opts.url, logger.getLogger('pg-default'));
-            pools.push(res.db._pool);
-        }
+
         Object.keys(opts).forEach(function (key) {
-            if (opts[key] && opts[key].url) {
-                var pool = createPool(key, opts[key].url, logger.getLogger('pg-' + key));
+            if (opts[key]) {
+                var pool = createPool(key, opts[key], logger.getLogger('pg-' + key));
                 pools.push(pool._pool);
-                res.db[key] = pool;
-                if (opts[key]['default']) {
-                    Object.keys(pool).forEach(function (key) {
-                        res.db[key] = pool[key];
-                    });
-                }
+                res.pgdb[key] = pool;
             }
         });
         return res;
     }
 
-    var pools;
+    let pools;
     try {
-        log.debug('Creating pools');
-        pools = createPools(options);
+        log.debug('Creating pools', Object.keys(options.pools));
+        pools = createPools(options.pools || {});
     } catch (e) {
         log.error('Error creating pools', e);
-        return register(e);
+        const err = e instanceof Error ? e : new Error(String(e));
+        return register(err, null);
     }
 
     if (options.checkOnStartUp) {
         log.info('Checking Pools connections on startup');
-        let filtered = Object.keys(pools.db).filter(function (key) {
-            return pools.db[key].connection;
+        let filtered = Object.keys(pools.pgdb).filter(function (key) {
+            return pools.pgdb[key].connection;
         }).map(function (key) {
             return key;
         });
-        return Promise.all(filtered.map(checkConnection)).then(result => {
+        return Promise.all(filtered.map(checkConnection)).then(() => {
             register(null, pools);
         }).catch(err => {
-            return register(err);
+            return register(err, null);
         });
     }
     register(null, pools);
 };
 
 module.exports.consumes = ['log']
-module.exports.provides = ['db']
+module.exports.provides = ['pgdb']
