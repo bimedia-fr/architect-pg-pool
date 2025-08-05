@@ -25,7 +25,7 @@ module.exports = [{
     checkOnStartUp : true
 }];
 ```
-* `url` :  Defines the postgres url to use for connection
+* `pools` :  Defines the postgres pools to use
 * `checkOnStartUp` : Defines if we must check connection validity on startup default is *false*.
 
 

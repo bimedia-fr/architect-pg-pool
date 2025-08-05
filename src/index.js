@@ -125,7 +125,7 @@ module.exports = function setup(options, imports, register) {
         }).map(function (key) {
             return key;
         });
-        return Promise.all(filtered.map(checkConnection)).then(result => {
+        return Promise.all(filtered.map(checkConnection)).then(() => {
             register(null, pools);
         }).catch(err => {
             return register(err, null);

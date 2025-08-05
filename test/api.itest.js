@@ -36,18 +36,18 @@ before(function() {
                 return reject(err);
             }
             pg = res;
-            pg.db.poolname.query(CREATE_TMP, function (err) {
+            pg.pgdb.poolname.query(CREATE_TMP, function (err) {
                 if (err) {
                     return reject(err);
                 }
-                pg.db.poolname.query(INSERT_SQL, resolve);
+                pg.pgdb.poolname.query(INSERT_SQL, resolve);
             });
         });
     });
 });
 
 after(function (){
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         if (pg) {
             pg.onDestroy();
         }
@@ -58,7 +58,7 @@ after(function (){
 describe('architect pg pool', function () {
     describe('query', function() {
         it('should query database', function (done) {
-            pg.db.poolname.query(SELECT_SQL, function (err, res) {
+            pg.pgdb.poolname.query(SELECT_SQL, function (err, res) {
                 assert.ifError(err);
                 assert.equal(res.rows[0].name, 'John Lennon');
                 done();
@@ -67,7 +67,7 @@ describe('architect pg pool', function () {
     });
     describe('connection', function () {
         it('should return a valid pg connection', function(done) {
-            pg.db.poolname.connection(function (err, con, close) {
+            pg.pgdb.poolname.connection(function (err, con, close) {
                 assert.ifError(err);
                 assert.ok(con);
                 close();

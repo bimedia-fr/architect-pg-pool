@@ -32,14 +32,14 @@ function assertPool(pool) {
 
 describe('architect pg pool', function() {
     describe('default pool', function() {
-        it('should export a *db* object to architect', function (done) {
+        it('should export a *pgdb* object to architect', function (done) {
             pgpool({pools: {
                 poolname: URI
             }
             }, {log: logger}, function (err, res) {
                 assert.ifError(err);
-                assert.ok(res.db, 'exports a *db* object to architect');
-                assertPool(res.db.poolname);
+                assert.ok(res.pgdb, 'exports a *pgdb* object to architect');
+                assertPool(res.pgdb.poolname);
                 done();
             });
         });
@@ -53,7 +53,7 @@ describe('architect pg pool', function() {
         });
     });
     describe('multipool', function () {
-        it('should export a db object', function (done) {
+        it('should export a pgdb object', function (done) {
             pgpool({ pools: {
                 first: {
                     URI
@@ -64,16 +64,16 @@ describe('architect pg pool', function() {
             }
             }, {log: logger}, function (err, res) {
                 assert.ifError(err);
-                assert.ok(res.db, 'exports a *db* object to architect');
-                assertPool(res.db.first);
-                assertPool(res.db.second);
+                assert.ok(res.pgdb, 'exports a *db* object to architect');
+                assertPool(res.pgdb.first);
+                assertPool(res.pgdb.second);
                 done();
             });
     
         });
     });
     describe('multipool with default', function(){
-        it('should export a db object to architect', function (done) {
+        it('should export a pgdb object to architect', function (done) {
             pgpool({pools: {
                 first: {
                     url: URI
@@ -83,9 +83,9 @@ describe('architect pg pool', function() {
                 }
             }}, {log: logger}, function (err, res) {
                 assert.ifError(err);
-                assert.ok(res.db, 'exports a *db* object to architect');
-                assertPool(res.db.first);
-                assertPool(res.db.second);
+                assert.ok(res.pgdb, 'exports a *pgdb* object to architect');
+                assertPool(res.pgdb.first);
+                assertPool(res.pgdb.second);
                 done();
             });
         });
