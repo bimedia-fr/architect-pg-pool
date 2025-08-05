@@ -4,7 +4,7 @@
   "description": "architect postgresql connection pool",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha test/*.test.js",
+    "test": "nyc --reporter=lcov --reporter=text mocha --recursive test/*.test.js --timeout 20000",
     "integration-test": "mocha test/*.*test.js",
     "types": "tsc",
     "preversion": "eslint src && tsc && npm test",
@@ -33,7 +33,9 @@
     "@types/node": "^20.19.8",
     "@types/pg": "^8.15.4",
     "architect-log4js": "^4.2.1",
+    "eslint": "^8.24.0",
     "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
     "typescript": "^5.8.3"
   }
 }
