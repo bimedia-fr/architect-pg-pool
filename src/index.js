@@ -66,12 +66,12 @@ module.exports = function setup(options, imports, register) {
     function checkConnection(key) {
         log.info(`Check: "${key}" started`);
         const timer = Date.now();
-        return pools.db[key].connection().then(client => {
+        return pools.pgdb[key].connection().then(client => {
             client.release();
             log.info(`Check: "${key}" connection OK (${Date.now() - timer}ms)`);
         }).catch(err => {
             log.error(`Check: "${key}" connection Failed (${Date.now() - timer}ms)`);
-            throw new Error('unable to create pg connection to ' + pools.db[key] + ' : ' + err);
+            throw new Error('unable to create pg connection to ' + pools.pgdb[key] + ' : ' + err);
         });
     }
 
