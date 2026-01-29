@@ -12,7 +12,8 @@
  * limitations under the License.
  */
 
-const QueryStream = require('pg-query-stream'),
+var once = require('once'),
+    QueryStream = require('pg-query-stream'),
     PassThrough = require('stream').PassThrough;
 
 /**
@@ -49,7 +50,8 @@ module.exports = function api(pool) {
         query: pool.query.bind(pool),
         queryStream: function (/** @type {string} */ sql, /** @type {Array} */ params, /** @type {Function} */ callback) {
             return deferred(function (/** @type {PassThrough} */ str) {
-                pool.connect(function (err, handle, done) {
+                pool.connect(function (err, handle, cb) {
+                    const done = once(cb);
                     if (err || !handle) {
                         const error = err || new Error('Unable to get a connection from the pool');
                         if (callback) {
@@ -65,6 +67,10 @@ module.exports = function api(pool) {
                         done(); // close conn on error
                         str.emit('error', err); // emit error.
                     });
+                    str.once('cancel', () => { // close conn on cancel to prevent connection leak.
+                        stream.destroy();
+                        done();
+                    }); // close conn on cancel.
                     stream.pipe(str);
                     return callback && callback(undefined, str);
                 });
