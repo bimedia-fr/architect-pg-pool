@@ -23,6 +23,7 @@
     "url": "https://github.com/bimedia-fr/architect-pg-pool/issues"
   },
   "dependencies": {
+    "once": "^1.4.0",
     "pg": "^8.7.1",
     "pg-query-stream": "^3.4.2"
   },

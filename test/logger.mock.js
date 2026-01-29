@@ -1,5 +1,10 @@
 module.exports = {
     getLogger: () => {
-        return;
+        return {
+            debug: () => {},
+            info: () => {},
+            warn: () => {},
+            error: () => {}
+        };
     }
 };
