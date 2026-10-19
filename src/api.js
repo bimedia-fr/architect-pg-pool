@@ -28,39 +28,51 @@ function deferred(fn) {
 
 module.exports = function api(pool) {
 
+    function queryStream(sql, params, callback) {
+        if (typeof callback !== 'function') {
+            return new Promise(function (resolve, reject) {
+                queryStream(sql, params, function (err, stream) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (!stream) {
+                        return reject(new Error('Query stream was not created'));
+                    }
+                    resolve(stream);
+                });
+            });
+        }
+        return deferred(function (str) {
+            pool.connect(function (err, handle, cb) {
+                const done = cb ? once(cb) : function () {};
+                if (err || !handle) {
+                    const error = err || new Error('Unable to get a connection from the pool');
+                    return callback(error);
+                }
+                var query = new QueryStream(sql, params);
+                var stream = handle.query(query);
+                stream.once('end', () => {
+                    done();
+                });
+                stream.once('error', function (err) {
+                    done(); // close conn on error
+                    str.emit('error', err); // emit error.
+                });
+                str.once('cancel', () => { // close conn on cancel to prevent connection leak.
+                    stream.destroy();
+                    done();
+                }); // close conn on cancel.
+                stream.pipe(str);
+                return callback(undefined, str);
+            });
+        });
+    }
+
     var result = {
         _pool: pool,
         connection: pool.connect.bind(pool),
         query: pool.query.bind(pool),
-        queryStream: function (sql, params, callback) {
-            return deferred(function (str) {
-                result.connection(function (err, handle, cb) {
-                    const done = once(cb);
-                    if (err) {
-                        if (callback) {
-                            return callback(err);
-                        }
-                        str.emit('error', err);
-                        return;
-                    }
-                    var query = new QueryStream(sql, params);
-                    var stream = handle.query(query);
-                    stream.once('end', () => {
-                        done();
-                    });
-                    stream.once('error', function (err) {
-                        done(); // close conn on error
-                        str.emit('error', err); // emit error.
-                    });
-                    str.once('cancel', () => { // close conn on cancel to prevent connection leak.
-                        stream.destroy();
-                        done();
-                    }); // close conn on cancel.
-                    stream.pipe(str);
-                    return callback && callback(undefined, str);
-                });
-            });
-        }
+        queryStream: queryStream
     };
     return result;
 };

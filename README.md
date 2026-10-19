@@ -187,13 +187,13 @@ module.exports = function setup(options, imports, register) {
 ```
 
 #### queryStream
-The `queryStream` method let you directly query the database without worrying about the database connection. This method passes a stream to the callback instead of a resultset. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
+The `queryStream` method lets you query the database without managing the connection. Without a callback it returns a promise that resolves to the result stream when the connection is ready. With a callback, it returns the stream immediately and calls the callback with an error or the stream when ready. The connection is released when the stream ends, errors, or is cancelled. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
 * _string_ text: the query text;
 * optional _array_ parameters: the query parameters;
-* optional _function_ callback : the function called when stream is ready.
-* returns: ReadableStream
+* optional _function_ callback: the function called when stream is ready (third argument, after `params`);
+* returns: `Promise<ReadableStream>` without a callback, otherwise `ReadableStream`.
 
-Once the stream is ready the callback is fired with an :
+When using a callback, it receives:
 
 * `err` object if an error occured or null;
 * `stream` the pg  result stream.
@@ -203,9 +203,11 @@ var JSONSteam = require('JSONStream');
 
 module.exports = function setup(options, imports, register) {
     var db = imports.db;
-    db.queryStream('SELECT * from USERS')
-        .pipe(JSONSteam.stringify())
-        .pipe(process.stdout);
+    db.queryStream('SELECT * from USERS').then(function (stream) {
+        stream.pipe(JSONSteam.stringify()).pipe(process.stdout);
+    }).catch(function (err) {
+        console.error(err);
+    });
     //...
 };
 ```
