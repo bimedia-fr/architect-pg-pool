@@ -17,35 +17,15 @@ var once = require('once'),
     PassThrough = require('stream').PassThrough;
 
 /**
- * Create a deferred stream.
- * @param {(stream: PassThrough) => void} fn callback function that will be called with the stream
- * @returns {PassThrough}
- */
-function deferred(fn) {
-    const str = new PassThrough({
-        'objectMode': true
-    });
-    fn(str);
-    return str;
-}
-
-/**
  * @typedef {Object} PoolAPI
  * @property {import('pg').Pool} _pool - The underlying pg pool
  * @property {import('pg').Pool['connect']} connection - Get a connection from the pool
  * @property {import('pg').Pool['query']} query - Execute a query on the pool
- * @property {QueryStreamFunction} queryStream - Execute a query and return a stream
+ * @property {QueryStreamFunction} queryStream - Execute a query and return a promise for the result stream
  */
 
 /**
- * @callback QueryStreamCallback
- * @param {Error | undefined} error
- * @param {PassThrough} [stream]
- * @returns {void}
- */
-
-/**
- * @typedef {((sql: string, params: unknown[] | undefined, callback: QueryStreamCallback) => PassThrough) & ((sql: string, params?: unknown[]) => Promise<PassThrough>)} QueryStreamFunction
+ * @typedef {(sql: string, params?: unknown[]) => Promise<PassThrough>} QueryStreamFunction
  */
 
 /**
@@ -54,58 +34,31 @@ function deferred(fn) {
  * @returns {PoolAPI}
  */
 module.exports = function api(pool) {
-    /**
-     * @overload
-     * @param {string} sql
-     * @param {unknown[] | undefined} params
-     * @param {QueryStreamCallback} callback
-     * @returns {PassThrough}
-     */
-    /**
-     * @overload
-     * @param {string} sql
-     * @param {unknown[]} [params]
-     * @returns {Promise<PassThrough>}
-     */
-    function queryStream(sql, params, callback) {
-        if (!callback) {
-            return new Promise(function (resolve, reject) {
-                queryStream(sql, params, function (err, stream) {
-                    if (err) {
-                        return reject(err);
-                    }
-                    if (!stream) {
-                        return reject(new Error('Query stream was not created'));
-                    }
-                    resolve(stream);
-                });
+    function queryStream(sql, params) {
+        return pool.connect().then(function (client) {
+            const output = new PassThrough({
+                'objectMode': true
             });
-        }
-        return deferred(function (/** @type {PassThrough} */ str) {
-            pool.connect(function (err, handle, cb) {
-                const done = cb ? once(cb) : function () {};
-                if (err || !handle) {
-                    const error = err || new Error('Unable to get a connection from the pool');
-                    if (callback) {
-                        return callback(error);
-                    }
-                    str.emit('error', error);
-                    return;
-                }
-                const query = new QueryStream(sql, params);
-                const stream = handle.query(query);
-                stream.once('end', done);
+            const release = once(client.release.bind(client));
+
+            try {
+                const stream = client.query(new QueryStream(sql, params));
+                stream.once('end', release);
                 stream.once('error', function (err) {
-                    done(); // close conn on error
-                    str.emit('error', err); // emit error.
+                    release();
+                    output.emit('error', err);
                 });
-                str.once('cancel', () => { // close conn on cancel to prevent connection leak.
+                output.once('cancel', function () {
                     stream.destroy();
-                    done();
-                }); // close conn on cancel.
-                stream.pipe(str);
-                return callback && callback(undefined, str);
-            });
+                    release();
+                });
+                stream.pipe(output);
+            } catch (error) {
+                release();
+                throw error;
+            }
+
+            return output;
         });
     }
 

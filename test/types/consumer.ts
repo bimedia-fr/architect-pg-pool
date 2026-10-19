@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import type {
     CustomPoolConfig, ModuleExport, ModuleImports, ModuleOptions,
     ModulePoolsConfig, PgDB, PoolAPI, PoolConfig, PoolLogger,
-    QueryStreamCallback, QueryStreamFunction
+    QueryStreamFunction
 } from '../..';
 
 const log: ModuleImports['log'] = { getLogger: () => console };
@@ -73,15 +73,9 @@ const arrays: Promise<import('pg').QueryArrayResult<[number]>> =
     api.query<[number]>({ text: 'SELECT 1', rowMode: 'array' });
 void arrays;
 
-const callback: QueryStreamCallback = (error, stream) => {
-    if (error) throw error;
-    if (stream) stream.pipe(process.stdout);
-};
 const queryStream: QueryStreamFunction = api.queryStream;
 const streamPromise: Promise<PassThrough> = queryStream('SELECT 1');
 const parameterizedStreamPromise: Promise<PassThrough> = queryStream('SELECT $1', [1]);
-queryStream('SELECT $1', [1], callback);
-queryStream('SELECT 1', undefined, callback);
 streamPromise.then(stream => stream.emit('cancel'));
 void parameterizedStreamPromise;
 api._pool.end();
@@ -94,8 +88,6 @@ const invalidOptions: ModuleOptions = { pools, defaultTimezoneUTC: 'true' };
 api.query(42);
 // @ts-expect-error Streaming parameters must be an array.
 api.queryStream('SELECT $1', 1);
-// @ts-expect-error The callback argument is required when supplying a callback.
-api.queryStream('SELECT 1', callback);
-// @ts-expect-error The callback receives errors, not strings.
-api.queryStream('SELECT 1', [], (error: string) => void error);
+// @ts-expect-error queryStream no longer accepts a callback.
+api.queryStream('SELECT 1', [], () => {});
 void [invalidConfig, invalidOptions];

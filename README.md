@@ -166,8 +166,8 @@ Please refer to node pg module for details on available options.
 
 Type declarations are included and discovered automatically. The package exports
 `PoolAPI`, `PgDB`, `PoolConfig`, `CustomPoolConfig`, `PoolLogger`, `ModuleOptions`,
-`ModulePoolsConfig`, `ModuleImports`, `ModuleExport`, `QueryStreamFunction`, and
-`QueryStreamCallback` types from its root:
+`ModulePoolsConfig`, `ModuleImports`, `ModuleExport`, and `QueryStreamFunction`
+types from its root:
 
 ```ts
 import type { ModuleOptions, PgDB, PoolAPI } from 'architect-pg-pool';
@@ -191,11 +191,8 @@ function getMainUser(pgdb: PgDB) {
 ```
 
 `query` and `connection` preserve the overloads and generics provided by `pg`,
-including callback and Promise forms. `queryStream(sql, params?)` returns a promise that resolves to a Node.js
-`PassThrough` stream in object mode. Providing a callback as the third argument
-preserves the existing behavior and returns the stream immediately. To provide a
-callback without parameters, pass `undefined` as the second argument. Its callback
-receives an error or a stream; check the error and stream before using the stream.
+including callback and Promise forms. `queryStream(sql, params?)` returns a promise
+that resolves to a Node.js `PassThrough` stream in object mode.
 
 For contributors, `npm run test:types` regenerates the declarations from the
 source JSDoc and checks TypeScript usage examples and invalid calls. Declarations
@@ -234,25 +231,18 @@ module.exports = function setup(options, imports, register) {
 ```
 
 #### queryStream
-The `queryStream` method lets you query the database without managing the connection. It returns a promise for the result stream when no callback is supplied, or passes the stream to the callback and returns it immediately when a callback is provided. The connection is released after the stream ends, errors, or is cancelled. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
+**Breaking change from v2.x:** `queryStream` no longer returns the stream immediately or accepts a callback. It now returns a promise that resolves to the result stream once the database connection is ready. Update existing calls to await the promise (or use `.then`) before consuming the stream. Connection-acquisition failures reject the promise; errors after the stream is created are emitted by the stream. The connection is released after the stream ends, errors, or is cancelled. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
 * _string_ text: the query text;
 * optional _array_ parameters: the query parameters;
-* optional _function_ callback : the function called when stream is ready. When supplied, pass it as the third argument after `params`.
-* returns: ReadableStream
-
-Once the stream is ready the callback is fired with an :
-
-* `err` object if an error occured or null;
-* `stream` the pg  result stream.
+* returns: `Promise<ReadableStream>`
 
 ```js
 var JSONSteam = require('JSONStream');
 
-module.exports = function setup(options, imports, register) {
-    var db = imports.pgdb;
-    db.poolname.queryStream('SELECT * from USERS')
+async function streamUsers(db) {
+    var stream = await db.poolname.queryStream('SELECT * from USERS');
+    stream
         .pipe(JSONSteam.stringify())
         .pipe(process.stdout);
-    //...
-};
+}
 ```

@@ -1,5 +1,5 @@
 declare namespace _exports {
-    export { PoolAPI, QueryStreamCallback, QueryStreamFunction, PoolConfig, CustomPoolConfig, PoolLogger, PgDB, ModulePoolsConfig, ModuleOptions, ModuleExport, ModuleImports };
+    export { PoolAPI, QueryStreamFunction, PoolConfig, CustomPoolConfig, PoolLogger, PgDB, ModulePoolsConfig, ModuleOptions, ModuleExport, ModuleImports };
 }
 declare function _exports(options: ModuleOptions, imports: ModuleImports, register: (arg0: Error | null, arg1: ModuleExport | null) => void): void | Promise<void>;
 declare namespace _exports {
@@ -8,7 +8,6 @@ declare namespace _exports {
 }
 export = _exports;
 type PoolAPI = import("./api").PoolAPI;
-type QueryStreamCallback = import("./api").QueryStreamCallback;
 type QueryStreamFunction = import("./api").QueryStreamFunction;
 type PoolConfig = import("./pool").PoolConfig;
 type CustomPoolConfig = import("./pool").CustomPoolConfig;

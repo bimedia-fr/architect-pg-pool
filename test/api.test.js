@@ -2,28 +2,37 @@ const assert = require('assert');
 const PassThrough = require('stream').PassThrough;
 const createAPI = require('../src/api');
 
-function createPool(connectError) {
-    return {
-        connect(callback) {
+function createPool(connectError, queryError) {
+    let releases = 0;
+    const pool = {
+        connect() {
             if (connectError) {
-                queueMicrotask(() => callback(connectError));
-                return;
+                return Promise.reject(connectError);
             }
-            queueMicrotask(() => callback(null, {
+            return Promise.resolve({
                 query() {
+                    if (queryError) {
+                        throw queryError;
+                    }
                     const stream = new PassThrough({ objectMode: true });
                     queueMicrotask(() => stream.end({ id: 1 }));
                     return stream;
+                },
+                release() {
+                    releases++;
                 }
-            }, () => {}));
+            });
         },
         query() {}
     };
+    pool.releaseCount = () => releases;
+    return pool;
 }
 
 describe('queryStream', function () {
-    it('resolves with a stream when no callback is provided', async function () {
-        const stream = await createAPI(createPool()).queryStream('SELECT 1');
+    it('resolves with a readable stream', async function () {
+        const pool = createPool();
+        const stream = await createAPI(pool).queryStream('SELECT 1');
         assert.ok(stream instanceof PassThrough);
         const rows = [];
         stream.on('data', row => rows.push(row));
@@ -32,6 +41,7 @@ describe('queryStream', function () {
             stream.once('error', reject);
         });
         assert.deepStrictEqual(rows, [{ id: 1 }]);
+        assert.strictEqual(pool.releaseCount(), 1);
     });
 
     it('rejects when it cannot acquire a connection', async function () {
@@ -39,13 +49,45 @@ describe('queryStream', function () {
         await assert.rejects(createAPI(createPool(error)).queryStream('SELECT 1'), error);
     });
 
-    it('preserves the stream return value and callback behavior', function (done) {
-        const api = createAPI(createPool());
-        const returned = api.queryStream('SELECT 1', undefined, (error, stream) => {
-            assert.ifError(error);
-            assert.strictEqual(stream, returned);
-            done();
+    it('releases the client after the stream ends', async function () {
+        const pool = createPool();
+        const stream = await createAPI(pool).queryStream('SELECT 1');
+        stream.resume();
+        await new Promise(resolve => stream.once('end', resolve));
+        assert.strictEqual(pool.releaseCount(), 1);
+    });
+
+    it('emits stream errors and releases the client', async function () {
+        let releases = 0;
+        const source = new PassThrough({ objectMode: true });
+        const pool = {
+            connect: () => Promise.resolve({
+                query: () => source,
+                release: () => releases++
+            }),
+            query() {}
+        };
+        const output = await createAPI(pool).queryStream('SELECT 1');
+        const error = new Error('stream failed');
+        const streamError = new Promise((resolve, reject) => {
+            output.once('error', reject);
         });
-        assert.ok(returned instanceof PassThrough);
+
+        source.emit('error', error);
+        await assert.rejects(streamError, error);
+        assert.strictEqual(releases, 1);
+    });
+
+    it('releases the client if query stream creation throws', async function () {
+        const pool = createPool(null, new Error('query failed'));
+        await assert.rejects(createAPI(pool).queryStream('SELECT 1'), /query failed/);
+        assert.strictEqual(pool.releaseCount(), 1);
+    });
+
+    it('releases the client when the stream is cancelled', async function () {
+        const pool = createPool();
+        const stream = await createAPI(pool).queryStream('SELECT 1');
+        stream.emit('cancel');
+        assert.strictEqual(pool.releaseCount(), 1);
     });
 });

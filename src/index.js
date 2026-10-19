@@ -21,7 +21,6 @@ const TSTAMP_WO_TZ =  1114;
 
 /**
  * @typedef {import('./api').PoolAPI} PoolAPI
- * @typedef {import('./api').QueryStreamCallback} QueryStreamCallback
  * @typedef {import('./api').QueryStreamFunction} QueryStreamFunction
  * @typedef {import('./pool').PoolConfig} PoolConfig
  * @typedef {import('./pool').CustomPoolConfig} CustomPoolConfig
