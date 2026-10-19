@@ -76,18 +76,21 @@ describe('architect pg pool', function () {
         });
     });
     describe('select stream', function(){
-        it('should return a result stream', function (done){
-            var stream = pg.db.poolname.queryStream(SELECT_SQL);
-            var count = 0;
-            stream.on('data', function (chunk) {
-                assert.ok(chunk);
-                assert.equal(chunk.name, 'John Lennon');
-                count++;
-            });
-            stream.on('error', assert.ifError);
-            stream.on('end', function () {
-                assert.equal(1, count);
-                done();
+        it('should return a result stream', function (){
+            return pg.pgdb.poolname.queryStream(SELECT_SQL).then(function (stream) {
+                var count = 0;
+                stream.on('data', function (chunk) {
+                    assert.ok(chunk);
+                    assert.equal(chunk.name, 'John Lennon');
+                    count++;
+                });
+                return new Promise(function (resolve, reject) {
+                    stream.on('error', reject);
+                    stream.on('end', function () {
+                        assert.equal(1, count);
+                        resolve();
+                    });
+                });
             });
         });
     });

@@ -16,7 +16,7 @@ const pg = require('pg'),
 /** 
  * @typedef {Object} CustomPoolConfig
  * @property {String} [validationQuery] - A query to validate the connection
- * @property {Function} [validateAsync] - A function to validate the connection asynchronously
+ * @property {(connection: pg.PoolClient, callback: (result: false | pg.QueryResult) => void) => void} [validateAsync] - A function to validate the connection asynchronously
  */
 
 /**
@@ -24,10 +24,14 @@ const pg = require('pg'),
  */
 
 /**
+ * @typedef {Pick<Console, 'error'>} PoolLogger
+ */
+
+/**
  * Create a PostgreSQL connection pool.
  * @param {string} name - The name of the pool.
  * @param {PoolConfig} config - The connection configuration.
- * @param {import('log4js').Logger} log - The logger instance.
+ * @param {PoolLogger} log - The logger instance.
  * @returns {import('./api').PoolAPI} - The PostgreSQL connection pool.
  */
 module.exports = function (name, config, log) {

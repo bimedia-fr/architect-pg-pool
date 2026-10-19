@@ -17,27 +17,39 @@ const pg = require('pg');
 
 const TSTAMP_WO_TZ =  1114;
 
+/** @import { EventEmitter } from 'node:events' */
+
 /**
- * @typedef {Object.<string, import('./pool').PoolConfig>} ModulePoolsConfig
+ * @typedef {import('./api').PoolAPI} PoolAPI
+ * @typedef {import('./api').QueryStreamCallback} QueryStreamCallback
+ * @typedef {import('./api').QueryStreamFunction} QueryStreamFunction
+ * @typedef {import('./pool').PoolConfig} PoolConfig
+ * @typedef {import('./pool').CustomPoolConfig} CustomPoolConfig
+ * @typedef {import('./pool').PoolLogger} PoolLogger
+ * @typedef {Object.<string, PoolAPI>} PgDB
+ */
+
+/**
+ * @typedef {Object.<string, PoolConfig>} ModulePoolsConfig
  */
 
 /**
  * @typedef {Object} ModuleOptions
- * @property {String} [defaultTimezoneUTC] - If set, the default timezone will be UTC
+ * @property {Boolean} [defaultTimezoneUTC] - If set, the default timezone will be UTC
  * @property {Boolean} [checkOnStartUp] - If true, check the connection to the database on startup
  * @property {ModulePoolsConfig} pools - Configuration for the database pools
  */
 
 /**
  * @typedef {Object} ModuleExport
- * @property {Object.<string, import('./api').PoolAPI>} pgdb
- * @property {Function} onDestroy
+ * @property {PgDB} pgdb
+ * @property {() => void} onDestroy
  */
 
 /**
  * @typedef {Object} ModuleImports
- * @property {import('node:events').EventEmitter} hub
- * @property {import('architect-log4js').Log4jsWithRequest} log
+ * @property {EventEmitter<Record<string | symbol, unknown[]>>} [hub]
+ * @property {{getLogger: (category: string) => Pick<Console, 'debug' | 'info' | 'error'>}} log
  */
 
 /**

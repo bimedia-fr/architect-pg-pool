@@ -162,6 +162,45 @@ module.exports = function setup(options, imports, register) {
 
 Please refer to node pg module for details on available options.
 
+### TypeScript
+
+Type declarations are included and discovered automatically. The package exports
+`PoolAPI`, `PgDB`, `PoolConfig`, `CustomPoolConfig`, `PoolLogger`, `ModuleOptions`,
+`ModulePoolsConfig`, `ModuleImports`, `ModuleExport`, `QueryStreamFunction`, and
+`QueryStreamCallback` types from its root:
+
+```ts
+import type { ModuleOptions, PgDB, PoolAPI } from 'architect-pg-pool';
+
+const options: ModuleOptions = {
+    pools: { main: { host: 'localhost', database: 'mydb' } },
+    checkOnStartUp: true,
+    defaultTimezoneUTC: true
+};
+
+async function getUser(db: PoolAPI, id: number) {
+    const result = await db.query<{ id: number; name: string }>(
+        'SELECT id, name FROM users WHERE id = $1', [id]
+    );
+    return result.rows[0];
+}
+
+function getMainUser(pgdb: PgDB) {
+    return getUser(pgdb.main, 1);
+}
+```
+
+`query` and `connection` preserve the overloads and generics provided by `pg`,
+including callback and Promise forms. `queryStream(sql, params?)` returns a promise that resolves to a Node.js
+`PassThrough` stream in object mode. Providing a callback as the third argument
+preserves the existing behavior and returns the stream immediately. To provide a
+callback without parameters, pass `undefined` as the second argument. Its callback
+receives an error or a stream; check the error and stream before using the stream.
+
+For contributors, `npm run test:types` regenerates the declarations from the
+source JSDoc and checks TypeScript usage examples and invalid calls. Declarations
+are also regenerated before packaging.
+
 ### API
 The pool object has the following methods :
 
@@ -195,10 +234,10 @@ module.exports = function setup(options, imports, register) {
 ```
 
 #### queryStream
-The `queryStream` method let you directly query the database without worrying about the database connection. This method passes a stream to the callback instead of a resultset. Behind the scene the method retreive a connection from the pool and close it afterward. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
+The `queryStream` method lets you query the database without managing the connection. It returns a promise for the result stream when no callback is supplied, or passes the stream to the callback and returns it immediately when a callback is provided. The connection is released after the stream ends, errors, or is cancelled. The method signature is similar to [node-pg query-stream](https://github.com/brianc/node-pg-query-stream#pg-query-stream).
 * _string_ text: the query text;
 * optional _array_ parameters: the query parameters;
-* optional _function_ callback : the function called when stream is ready.
+* optional _function_ callback : the function called when stream is ready. When supplied, pass it as the third argument after `params`.
 * returns: ReadableStream
 
 Once the stream is ready the callback is fired with an :

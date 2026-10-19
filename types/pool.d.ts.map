@@ -1,1 +1,1 @@
-{"version":3,"file":"pool.d.ts","sourceRoot":"","sources":["../src/pool.js"],"names":[],"mappings":";;;AAgCiB,gCALN,MAAM,UACN,UAAU,OACV,OAAO,QAAQ,EAAE,MAAM,GACrB,OAAO,OAAO,EAAE,OAAO,CAsBnC;;;;;;;;;;;;kBA9BY,EAAE,CAAC,UAAU,GAAG,gBAAgB"}
+{"version":3,"file":"pool.d.ts","sourceRoot":"","sources":["../src/pool.js"],"names":[],"mappings":";;;AAoCiB,gCALN,MAAM,UACN,UAAU,OACV,UAAU,GACR,OAAO,OAAO,EAAE,OAAO,CAsBnC;;;;;;;;;;kCAtC0B,EAAE,CAAC,UAAU,YAAY,CAAC,MAAM,EAAE,KAAK,GAAG,EAAE,CAAC,WAAW,KAAK,IAAI,KAAK,IAAI;;kBAIxF,EAAE,CAAC,UAAU,GAAG,gBAAgB;kBAIhC,IAAI,CAAC,OAAO,EAAE,OAAO,CAAC"}
